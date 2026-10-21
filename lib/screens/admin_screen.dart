@@ -9,6 +9,7 @@ import '../widgets/admin/admin_directory_tab.dart';
 import '../widgets/admin/admin_overview_tab.dart';
 import '../widgets/admin/admin_pending_tab.dart';
 import '../widgets/admin/admin_seat_manager_tab.dart';
+import 'login_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -32,6 +33,59 @@ class _AdminScreenState extends State<AdminScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _showSignOutDialog(BuildContext context, AuthProvider authProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: AppColors.primaryRed),
+            SizedBox(width: 8),
+            Text(
+              'লগআউট কনফার্মেশন',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'আপনি কি এডমিন একাউন্ট (${authProvider.email}) থেকে সাইন-আউট করতে চান?',
+          style: const TextStyle(fontSize: 13.5, color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('বাতিল'),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.logout_rounded, size: 18),
+            label: const Text('সাইন-আউট করুন'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              final nav = Navigator.of(context);
+              nav.pop();
+              await authProvider.signOut();
+              if (mounted) {
+                nav.pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (context) => const LoginScreen(),
+                  ),
+                  (route) => false,
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -123,6 +177,14 @@ class _AdminScreenState extends State<AdminScreen>
         title: const Text('BRTC Admin Control Center'),
         elevation: 2,
         backgroundColor: AppColors.primaryRedDark,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: Colors.white),
+            tooltip: 'এডমিন সাইন-আউট (Sign Out)',
+            onPressed: () => _showSignOutDialog(context, authProvider),
+          ),
+          const SizedBox(width: 8),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
