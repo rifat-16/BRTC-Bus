@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../models/bus_model.dart';
 import '../models/ticket_model.dart';
+import '../providers/auth_provider.dart';
 import '../services/firestore_service.dart';
 import '../widgets/bus_seat_plan_widget.dart';
 import 'revenue_analytics_screen.dart';
@@ -21,16 +23,12 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen>
     with TickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
-  final TextEditingController _pinController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
 
   // Counter Form Controllers
   final _counterFormKey = GlobalKey<FormState>();
   final TextEditingController _counterNameController = TextEditingController();
   final TextEditingController _counterPhoneController = TextEditingController();
-
-  final String _adminMasterPin = "1234";
-  bool _isAuthorized = false;
 
   late TabController _tabController;
   late AnimationController _entryAnimController;
@@ -48,12 +46,6 @@ class _AdminScreenState extends State<AdminScreen>
   // Counter Form States
   BusModel _counterSelectedBus = FirestoreService.officialBRTCBuses.first;
   DateTime _counterJourneyDate = DateTime.now();
-
-  final List<String> _authorizedAdminEmails = [
-    'admin@brtc.com',
-    'rifat@gmail.com',
-    'brtc.admin@gmail.com',
-  ];
 
   @override
   void initState() {
@@ -79,114 +71,16 @@ class _AdminScreenState extends State<AdminScreen>
     ));
 
     _entryAnimController.forward();
-    _checkAuthorization();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _entryAnimController.dispose();
-    _pinController.dispose();
     _searchController.dispose();
     _counterNameController.dispose();
     _counterPhoneController.dispose();
     super.dispose();
-  }
-
-  void _checkAuthorization() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null &&
-        user.email != null &&
-        _authorizedAdminEmails.contains(user.email!.toLowerCase())) {
-      setState(() {
-        _isAuthorized = true;
-      });
-    }
-  }
-
-  void _verifyPin() {
-    if (_pinController.text.trim() == _adminMasterPin) {
-      setState(() {
-        _isAuthorized = true;
-      });
-      Navigator.pop(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('ভুল সিকিউরিটি পিন! সঠিক PIN প্রবেশ করান।'),
-          backgroundColor: AppColors.primaryRed,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-    }
-  }
-
-  void _showPinDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.admin_panel_settings_rounded,
-                color: AppColors.primaryRed),
-            SizedBox(width: 8),
-            Text(
-              'এডমিন ভেরিফিকেশন',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'এডমিন কন্ট্রোল সেন্টারে প্রবেশের জন্য সিকিউরিটি পাসকোড (PIN) প্রবেশ করান:',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _pinController,
-              obscureText: true,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Admin PIN Code',
-                hintText: 'ডিফল্ট PIN: 1234',
-                prefixIcon: const Icon(Icons.lock_rounded),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('বাতিল করুন'),
-          ),
-          ElevatedButton(
-            onPressed: _verifyPin,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('প্রবেশ করুন'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _makePhoneCall(String phoneNumber) async {
@@ -1036,10 +930,85 @@ class _AdminScreenState extends State<AdminScreen>
 
   @override
   Widget build(BuildContext context) {
-    if (!_isAuthorized) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showPinDialog();
-      });
+    final authProvider = context.watch<AuthProvider>();
+
+    if (!authProvider.isAdmin) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundColor,
+        appBar: AppBar(
+          title: const Text('অননুমোদিত অ্যাক্সেস (Access Denied)'),
+          backgroundColor: AppColors.primaryRed,
+          foregroundColor: Colors.white,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(28.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryRed.withAlpha(20),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.gpp_bad_rounded,
+                        size: 56,
+                        color: AppColors.primaryRed,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'অননুমোদিত অ্যাক্সেস!',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'আপনার জিমেইল একাউন্টটি (${authProvider.email}) এডমিন হিসেবে অনুমোদিত নয়। শুধুমাত্র নির্দিষ্ট বিআরটিসি এডমিন জিমেইল দিয়েই এই প্যানেল ব্যবহার করা সম্ভব।',
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                      label: const Text('হোম স্ক্রিনে ফিরে যান'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryRed,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     return Scaffold(
@@ -1065,11 +1034,7 @@ class _AdminScreenState extends State<AdminScreen>
           ],
         ),
       ),
-      body: !_isAuthorized
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primaryRed),
-            )
-          : StreamBuilder<List<TicketModel>>(
+      body: StreamBuilder<List<TicketModel>>(
               stream: _firestoreService.getAllTicketsStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {

@@ -1,13 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   User? _user;
   bool _isLoading = false;
   bool _isGuestMode = false;
+  bool _isFirestoreAdmin = false;
   String? _errorMessage;
 
   User? get user => _user;
@@ -15,6 +18,12 @@ class AuthProvider with ChangeNotifier {
   bool get isGuestMode => _isGuestMode;
   bool get isAuthenticated => _user != null || _isGuestMode;
   String? get errorMessage => _errorMessage;
+
+  // 100% Dynamic Admin Check via Cloud Firestore 'admins' Collection
+  bool get isAdmin {
+    if (_isGuestMode || _user == null || _user!.email == null) return false;
+    return _isFirestoreAdmin;
+  }
 
   String get displayName {
     if (_isGuestMode) return 'গেস্ট ইউজার';
@@ -35,7 +44,27 @@ class AuthProvider with ChangeNotifier {
       _user = user;
       if (user != null) {
         _isGuestMode = false;
+        _checkFirestoreAdminStatus(user);
+      } else {
+        _isFirestoreAdmin = false;
       }
+      notifyListeners();
+    });
+  }
+
+  void _checkFirestoreAdminStatus(User user) {
+    if (user.email == null) return;
+    final cleanEmail = user.email!.trim().toLowerCase();
+
+    _db.collection('admins').doc(cleanEmail).snapshots().listen((doc) {
+      if (doc.exists && doc.data()?['active'] == true) {
+        _isFirestoreAdmin = true;
+      } else {
+        _isFirestoreAdmin = false;
+      }
+      notifyListeners();
+    }, onError: (_) {
+      _isFirestoreAdmin = false;
       notifyListeners();
     });
   }
@@ -49,6 +78,9 @@ class AuthProvider with ChangeNotifier {
       if (credential != null) {
         _user = credential.user;
         _isGuestMode = false;
+        if (_user != null) {
+          _checkFirestoreAdminStatus(_user!);
+        }
         _setLoading(false);
         return true;
       } else {
@@ -72,6 +104,7 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
     await _authService.signOut();
     _isGuestMode = false;
+    _isFirestoreAdmin = false;
     _user = null;
     _setLoading(false);
   }

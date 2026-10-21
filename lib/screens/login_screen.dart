@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../providers/auth_provider.dart';
 import 'admin_screen.dart';
@@ -22,8 +23,9 @@ class _LoginScreenState extends State<LoginScreen>
   late Animation<double> _cardFade;
   late Animation<Offset> _cardSlide;
   late Animation<double> _cardScale;
-  late Animation<double> _guestFade;
-  late Animation<Offset> _guestSlide;
+  late Animation<double> _helplineFade;
+  late Animation<Offset> _helplineSlide;
+  late Animation<double> _footerFade;
 
   @override
   void initState() {
@@ -91,20 +93,27 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
 
-    _guestFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _helplineFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animController,
-        curve: const Interval(0.55, 1.0, curve: Curves.easeOut),
+        curve: const Interval(0.55, 0.9, curve: Curves.easeOut),
       ),
     );
 
-    _guestSlide = Tween<Offset>(
+    _helplineSlide = Tween<Offset>(
       begin: const Offset(0, 0.35),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(
         parent: _animController,
-        curve: const Interval(0.55, 1.0, curve: Curves.easeOutCubic),
+        curve: const Interval(0.55, 0.95, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _footerFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: const Interval(0.75, 1.0, curve: Curves.easeIn),
       ),
     );
 
@@ -122,11 +131,13 @@ class _LoginScreenState extends State<LoginScreen>
     final bool success = await authProvider.signInWithGoogle();
 
     if (success && mounted) {
+      final Widget targetScreen =
+          authProvider.isAdmin ? const AdminScreen() : const HomeScreen();
+
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const HomeScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) => targetScreen,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -144,6 +155,87 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       );
     }
+  }
+
+  Widget _buildHelplineBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: InkWell(
+        onTap: () async {
+          final Uri url = Uri(scheme: 'tel', path: '01624622614');
+          try {
+            if (await canLaunchUrl(url)) {
+              await launchUrl(url);
+            }
+          } catch (_) {}
+        },
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(10),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryRed.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.headset_mic_rounded,
+                  color: AppColors.primaryRed,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'সখিপুর কাউন্টার হেল্পলাইন: 01624-622614',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Column(
+      children: [
+        Text(
+          '© 2026 বাংলাদেশ সড়ক পরিবহন কর্পোরেশন (বিআরটিসি)',
+          style: TextStyle(
+            fontSize: 11.5,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          'BRTC Official Bus E-Ticketing System',
+          style: TextStyle(
+            fontSize: 10.5,
+            color: Colors.grey.shade500,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -291,7 +383,7 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 36),
 
             // Animated Welcome Back Auth Card
             Padding(
@@ -324,7 +416,7 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'Sign in to easily book tickets and access your travel history.',
+                              'Sign in with Google to easily book tickets and access your travel history.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,
@@ -411,93 +503,23 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 48),
 
-            // Animated Continue as Guest Option
+            // 1. Sleek Floating Helpline Pill Bar (Animated Entrance)
             SlideTransition(
-              position: _guestSlide,
+              position: _helplineSlide,
               child: FadeTransition(
-                opacity: _guestFade,
-                child: GestureDetector(
-                  onTap: () {
-                    context.read<AuthProvider>().continueAsGuest();
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.grey.shade300),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(10),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Continue as Guest',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: AppColors.primaryGreen,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                opacity: _helplineFade,
+                child: _buildHelplineBar(),
               ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 36),
 
-            // Admin Portal Shortcut Button
-            SlideTransition(
-              position: _guestSlide,
-              child: FadeTransition(
-                opacity: _guestFade,
-                child: TextButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const AdminScreen(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(
-                    Icons.admin_panel_settings_rounded,
-                    size: 18,
-                    color: AppColors.primaryRed,
-                  ),
-                  label: const Text(
-                    'Admin Portal (এডমিন প্যানেল)',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryRed,
-                    ),
-                  ),
-                ),
-              ),
+            // 2. Official Copyright Footer (Animated Entrance)
+            FadeTransition(
+              opacity: _footerFade,
+              child: _buildFooter(),
             ),
 
             const SizedBox(height: 30),

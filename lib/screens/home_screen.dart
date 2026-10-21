@@ -10,6 +10,7 @@ import '../widgets/custom_dropdown.dart';
 import 'bus_list_screen.dart';
 import 'login_screen.dart';
 import 'my_tickets_screen.dart';
+import 'admin_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -200,6 +201,33 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 const SizedBox(height: 20),
                 const Divider(),
+                if (authProvider.isAdmin) ...[
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryRed.withAlpha(25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.admin_panel_settings_rounded,
+                          color: AppColors.primaryRed),
+                    ),
+                    title: const Text('Admin Panel (এডমিন প্যানেল)',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryRed)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AdminScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(),
+                ],
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
@@ -210,7 +238,8 @@ class _HomeScreenState extends State<HomeScreen>
                     child: const Icon(Icons.confirmation_number_rounded,
                         color: AppColors.primaryGreen),
                   ),
-                  title: const Text('My Tickets', style: TextStyle(fontWeight: FontWeight.bold)),
+                  title: const Text('My Tickets',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(

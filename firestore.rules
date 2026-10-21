@@ -1,8 +1,55 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+
+    // 1. Helper function: Check if user exists in the dynamic 'admins' collection in Firestore
+    function isAdmin() {
+      return request.auth != null && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email)) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // 2. Helper function: Check if user is signed in
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Admins metadata collection (Protected - strictly admin accessible)
+    match /admins/{adminDoc} {
+      allow read, write: if isAdmin();
+    }
+
+    // Buses and Route Fares (Public read for schedules; Admin-only write for fare updates)
+    match /buses/{busId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /schedules/{dateDoc} {
+        allow read: if true;
+        allow write, update: if isAuthenticated();
+      }
+    }
+
+    match /route_fares/{routeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Tickets Collection Rules
+    match /tickets/{ticketId} {
+      // Passengers can create booking requests
+      allow create: if isAuthenticated();
+
+      // Users can read only their own tickets; Admin can read all tickets
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.userEmail == request.auth.token.email ||
+        isAdmin()
+      );
+
+      // ONLY Admins can approve (CONFIRMED), reject (REJECTED), or delete tickets
+      allow update, delete: if isAdmin();
     }
   }
 }
