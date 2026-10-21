@@ -1,36 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+
+  <!-- Primary SEO Meta Tags -->
+  <title>BRTC Sakhipur - BRTC Bus Ticket Booking Portal</title>
+  <meta name="title" content="BRTC Sakhipur - BRTC Bus Ticket Booking Portal">
+  <meta name="description" content="সখিপুর-ঢাকা বিআরটিসি এসি বাসের অনলাইন টিকিট বুকিং পোর্টাল। সখিপুর, বড়চওনা, গারোবাজার ও সাগরদিঘী রুটের বিআরটিসি টিকিট কাটুন ঘরে বসেই।">
+  <meta name="keywords" content="brtc, brtc sakhipur, brtc bus sakhipur, brtc ticket, brtc bus ticket booking, sakhipur to dhaka bus, borochowna brtc, garobazar brtc, sagordighi brtc, সখিপুর বিআরটিসি">
+  <meta name="author" content="BRTC Sakhipur Counter">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook SEO -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://brtc-bus-sakhipur.web.app/">
+  <meta property="og:title" content="BRTC Sakhipur - BRTC Bus Ticket Booking Portal">
+  <meta property="og:description" content="সখিপুর-ঢাকা বিআরটিসি এসি বাসের অনলাইন টিকিট বুকিং পোর্টাল। ঘরে বসেই সিট সিলেক্ট করে টিকিট কাটুন।">
+  <meta property="og:image" content="icons/Icon-512.png">
+
+  <!-- Twitter SEO -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="BRTC Sakhipur - BRTC Bus Ticket Booking Portal">
+  <meta property="twitter:description" content="সখিপুর-ঢাকা বিআরটিসি এসি বাসের অনলাইন টিকিট বুকিং পোর্টাল। ঘরে বসেই সিট সিলেক্ট করে টিকিট কাটুন।">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="brtc">
+  <meta name="apple-mobile-web-app-title" content="BRTC Sakhipur">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>brtc</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Google Structured Data Schema for Search Engine Snippet -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BusReservationService",
+    "name": "BRTC Sakhipur Bus Ticket Booking",
+    "url": "https://brtc-bus-sakhipur.web.app/",
+    "logo": "https://brtc-bus-sakhipur.web.app/favicon.png",
+    "description": "Official BRTC Bus Ticket Booking Portal for Sakhipur, Borochowna, Garobazar, Sagordighi to Dhaka route.",
+    "telephone": "01624-622614",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Sakhipur",
+      "addressRegion": "Tangail",
+      "addressCountry": "BD"
+    }
+  }
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
