@@ -19,19 +19,43 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
   late TabController _tabController;
+  late AnimationController _entryAnimController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+
+    _entryAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _entryAnimController,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _entryAnimController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _entryAnimController.forward();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _entryAnimController.dispose();
     super.dispose();
   }
 
@@ -202,43 +226,49 @@ class _AdminScreenState extends State<AdminScreen>
           ],
         ),
       ),
-      body: StreamBuilder<List<TicketModel>>(
-        stream: _firestoreService.getAllTicketsStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primaryRed),
-            );
-          }
+      body: SlideTransition(
+        position: _slideAnimation,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: StreamBuilder<List<TicketModel>>(
+            stream: _firestoreService.getAllTicketsStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primaryRed),
+                );
+              }
 
-          final allTickets = snapshot.data ?? [];
-          final pendingTickets =
-              allTickets.where((t) => t.status == 'PENDING').toList();
+              final allTickets = snapshot.data ?? [];
+              final pendingTickets =
+                  allTickets.where((t) => t.status == 'PENDING').toList();
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              AdminOverviewTab(
-                allTickets: allTickets,
-                tabController: _tabController,
-                firestoreService: _firestoreService,
-              ),
-              AdminPendingTab(
-                pendingTickets: pendingTickets,
-                firestoreService: _firestoreService,
-              ),
-              AdminDirectoryTab(
-                allTickets: allTickets,
-              ),
-              AdminSeatManagerTab(
-                firestoreService: _firestoreService,
-              ),
-              AdminCounterTab(
-                firestoreService: _firestoreService,
-              ),
-            ],
-          );
-        },
+              return TabBarView(
+                controller: _tabController,
+                children: [
+                  AdminOverviewTab(
+                    allTickets: allTickets,
+                    tabController: _tabController,
+                    firestoreService: _firestoreService,
+                  ),
+                  AdminPendingTab(
+                    pendingTickets: pendingTickets,
+                    firestoreService: _firestoreService,
+                  ),
+                  AdminDirectoryTab(
+                    allTickets: allTickets,
+                  ),
+                  AdminSeatManagerTab(
+                    firestoreService: _firestoreService,
+                  ),
+                  AdminCounterTab(
+                    firestoreService: _firestoreService,
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }

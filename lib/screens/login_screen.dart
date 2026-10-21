@@ -136,10 +136,23 @@ class _LoginScreenState extends State<LoginScreen>
 
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 600),
+          transitionDuration: const Duration(milliseconds: 750),
           pageBuilder: (context, animation, secondaryAnimation) => targetScreen,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
+            final curvedAnim = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            );
+            return FadeTransition(
+              opacity: curvedAnim,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.08),
+                  end: Offset.zero,
+                ).animate(curvedAnim),
+                child: child,
+              ),
+            );
           },
         ),
       );
