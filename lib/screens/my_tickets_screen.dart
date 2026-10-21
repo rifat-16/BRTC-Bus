@@ -34,6 +34,14 @@ class MyTicketsScreen extends StatelessWidget {
 
           final tickets = snapshot.data ?? [];
 
+          // Sort tickets descending (NEWEST tickets on TOP, OLDER tickets at BOTTOM)
+          tickets.sort((a, b) {
+            if (a.createdAt == null && b.createdAt == null) return 0;
+            if (a.createdAt == null) return 1;
+            if (b.createdAt == null) return -1;
+            return b.createdAt!.compareTo(a.createdAt!);
+          });
+
           if (tickets.isEmpty) {
             return Center(
               child: Padding(

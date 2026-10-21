@@ -98,7 +98,7 @@ class ManualPaymentVerificationCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'ধাপ ১: $methodUpper মার্চেন্ট নম্বর',
+                      'ধাপ ১: BKASH পার্সোনাল নম্বর',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,

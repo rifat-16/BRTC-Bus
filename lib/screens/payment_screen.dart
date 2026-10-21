@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../core/app_colors.dart';
-import '../models/ticket_model.dart';
 import '../services/firestore_service.dart';
-import '../widgets/payment_method_card.dart';
 import 'manual_verification_screen.dart';
-import 'ticket_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String busId;
@@ -39,241 +35,224 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  String _selectedMethod = 'bkash';
-  bool _isLoading = false;
 
-  final Map<String, String> _paymentNumbers = {
-    'bkash': '01712345678',
-    'nagad': '01912345678',
-    'rocket': '01812345678',
-  };
-
-  final Map<String, String> _paymentSubtitles = {
-    'bkash': 'Pay securely with bKash',
-    'nagad': 'Pay via Nagad account',
-    'rocket': 'Dutch-Bangla Bank Mobile Banking',
-    'card': 'Visa, MasterCard, Amex',
-  };
-
-  void _proceedToNext() async {
-    if (_selectedMethod == 'card') {
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        final ticket = TicketModel(
+  void _proceedToNext(String currentBkashNumber) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ManualVerificationScreen(
           busId: widget.busId,
-          userId: user?.uid ?? 'guest',
-          userEmail: user?.email ?? 'guest@brtc.com',
+          passengerName: widget.passengerName,
+          phoneNumber: widget.phoneNumber,
           busName: widget.busName,
           from: widget.from,
           to: widget.to,
           journeyDate: widget.journeyDate,
+          departureTime: widget.departureTime,
           selectedSeats: widget.selectedSeats,
           totalAmount: widget.totalAmount,
-          passengerName: widget.passengerName,
-          passengerPhone: widget.phoneNumber,
-          paymentMethod: 'CARD',
-          trxId: 'CARD-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}',
-        );
-
-        final createdTicket = await _firestoreService.bookSeatsAndCreateTicket(
-          busId: widget.busId,
-          ticket: ticket,
-        );
-
-        if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TicketScreen(
-                ticketId: createdTicket.ticketId ?? 'BRTC-TICKET',
-                passengerName: widget.passengerName,
-                phoneNumber: widget.phoneNumber,
-                busName: widget.busName,
-                from: widget.from,
-                to: widget.to,
-                journeyDate: widget.journeyDate,
-                departureTime: widget.departureTime,
-                seats: widget.selectedSeats,
-                amountPaid: widget.totalAmount,
-              ),
-            ),
-            (route) => false,
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString().replaceAll('Exception: ', '')),
-              backgroundColor: AppColors.primaryRed,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ManualVerificationScreen(
-            busId: widget.busId,
-            passengerName: widget.passengerName,
-            phoneNumber: widget.phoneNumber,
-            busName: widget.busName,
-            from: widget.from,
-            to: widget.to,
-            journeyDate: widget.journeyDate,
-            departureTime: widget.departureTime,
-            selectedSeats: widget.selectedSeats,
-            totalAmount: widget.totalAmount,
-            selectedMethod: _selectedMethod,
-            paymentNumber: _paymentNumbers[_selectedMethod]!,
-          ),
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Payment'),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Amount Display Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryRed, Colors.redAccent],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.withAlpha(76),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const Text('Amount to Pay', style: TextStyle(color: Colors.white70, fontSize: 16)),
-                  const SizedBox(height: 8),
-                  Text(
-                    '৳ ${widget.totalAmount}',
-                    style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              'Select Payment Method',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-
-            // Payment Methods List
-            _buildPaymentOption(
-              id: 'bkash',
-              title: 'bKash',
-              subtitle: _paymentSubtitles['bkash']!,
-              iconData: Icons.account_balance_wallet,
-              color: Colors.pink,
-            ),
-            _buildPaymentOption(
-              id: 'nagad',
-              title: 'Nagad',
-              subtitle: _paymentSubtitles['nagad']!,
-              iconData: Icons.mobile_screen_share,
-              color: Colors.deepOrange,
-            ),
-            _buildPaymentOption(
-              id: 'rocket',
-              title: 'Rocket',
-              subtitle: _paymentSubtitles['rocket']!,
-              iconData: Icons.rocket_launch,
-              color: Colors.purple,
-            ),
-            _buildPaymentOption(
-              id: 'card',
-              title: 'Credit / Debit Card',
-              subtitle: _paymentSubtitles['card']!,
-              iconData: Icons.credit_card,
-              color: Colors.blueAccent,
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: SizedBox(
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _proceedToNext,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryGreen,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                  : const Text(
-                      'Proceed',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-            ),
-          ),
+          selectedMethod: 'bkash',
+          paymentNumber: currentBkashNumber,
         ),
       ),
     );
   }
 
-  Widget _buildPaymentOption({
-    required String id,
-    required String title,
-    required String subtitle,
-    required IconData iconData,
-    required Color color,
-  }) {
-    final isSelected = _selectedMethod == id;
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<String>(
+      stream: _firestoreService.getPaymentConfigStream(),
+      builder: (context, snapshot) {
+        final String activeBkashNumber = snapshot.data ?? '01712345678';
 
-    return PaymentMethodCard(
-      title: title,
-      subtitle: subtitle,
-      iconData: iconData,
-      color: color,
-      isSelected: isSelected,
-      onTap: () {
-        setState(() {
-          _selectedMethod = id;
-        });
+        return Scaffold(
+          backgroundColor: AppColors.backgroundColor,
+          appBar: AppBar(
+            title: const Text('পেমেন্ট পদ্ধতি নির্বাচন'),
+            elevation: 0,
+            backgroundColor: AppColors.primaryRedDark,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Amount Display Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primaryRed, Colors.redAccent],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withAlpha(76),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'পরিশোধযোগ্য মূল্য (Amount to Pay)',
+                        style: TextStyle(color: Colors.white70, fontSize: 15),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '৳ ${widget.totalAmount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 38,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                const Text(
+                  'পেমেন্ট মেথড (Payment Method)',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 14),
+
+                // Official bKash Card Option
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF0F5),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFE2136E),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE2136E).withAlpha(25),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // Official bKash Brand Pink Badge with White bKash Emblem
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE2136E),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'bKash',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                                fontStyle: FontStyle.italic,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(
+                              Icons.verified_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'bKash (বিকাশ)',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFE2136E),
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Send Money করে নিরাপদ পেমেন্ট করুন',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE2136E),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () => _proceedToNext(activeBkashNumber),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'পরবর্তী ধাপে যান (Proceed)',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
       },
     );
   }

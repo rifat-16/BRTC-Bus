@@ -50,6 +50,22 @@ class FirestoreService {
     return false;
   }
 
+  // Stream for Dynamic bKash Personal Payment Number
+  Stream<String> getPaymentConfigStream() {
+    return _db.collection('settings').doc('payment_config').snapshots().map((doc) {
+      if (!doc.exists || doc.data() == null) return '01712345678';
+      return (doc.data()!['bkashNumber'] as String?) ?? '01712345678';
+    }).handleError((_) => '01712345678');
+  }
+
+  // Admin Action: Update bKash Personal Payment Number in Cloud Firestore
+  Future<void> updateBkashNumber(String newNumber) async {
+    await _db.collection('settings').doc('payment_config').set({
+      'bkashNumber': newNumber,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   // Official Default Route Fares (Station-to-Station)
   static final List<RouteFareModel> officialRouteFares = [
     RouteFareModel(id: 'dhaka_sakhipur', from: 'ঢাকা', to: 'সখিপুর', fare: 350),
