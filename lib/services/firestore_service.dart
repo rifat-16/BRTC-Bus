@@ -1,20 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/bus_model.dart';
+import '../models/route_fare_model.dart';
 import '../models/ticket_model.dart';
-
-class RouteFareModel {
-  final String id;
-  final String from;
-  final String to;
-  final int fare;
-
-  RouteFareModel({
-    required this.id,
-    required this.from,
-    required this.to,
-    required this.fare,
-  });
-}
 
 class ScheduleSeatsData {
   final List<String> bookedSeats;

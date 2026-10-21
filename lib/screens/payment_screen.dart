@@ -123,11 +123,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 const SizedBox(height: 14),
 
-                // Official bKash Card Option
+                // Official bKash Card Option with Official Brand Logo
                 Container(
-                  padding: const EdgeInsets.all(18),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF0F5),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: const Color(0xFFE2136E),
@@ -143,35 +143,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                   child: Row(
                     children: [
-                      // Official bKash Brand Pink Badge with White bKash Emblem
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2136E),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'bKash',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 18,
-                                fontStyle: FontStyle.italic,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                            Icon(
-                              Icons.verified_rounded,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ],
-                        ),
-                      ),
+                      // Official bKash Logo Container
+                      const _BKashOfficialLogoWidget(),
+
                       const SizedBox(width: 14),
                       const Expanded(
                         child: Column(
@@ -254,6 +228,62 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Official bKash Brand Logo Widget
+class _BKashOfficialLogoWidget extends StatelessWidget {
+  const _BKashOfficialLogoWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 76,
+      height: 44,
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2136E).withAlpha(40)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Image.network(
+        'https://seeklogo.com/images/B/bkash-logo-FBB258B90F-seeklogo.com.png',
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.network(
+            'https://raw.githubusercontent.com/bikash-logo/bkash_logo.png',
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2136E),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Text(
+                    'bKash',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

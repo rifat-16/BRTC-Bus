@@ -52,6 +52,27 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
+  Future<bool> verifyAdminStatusDirect(User user) async {
+    if (user.email == null) {
+      _isFirestoreAdmin = false;
+      return false;
+    }
+    final cleanEmail = user.email!.trim().toLowerCase();
+
+    try {
+      final doc = await _db.collection('admins').doc(cleanEmail).get();
+      if (doc.exists && doc.data()?['active'] == true) {
+        _isFirestoreAdmin = true;
+        notifyListeners();
+        return true;
+      }
+    } catch (_) {}
+
+    _isFirestoreAdmin = false;
+    notifyListeners();
+    return false;
+  }
+
   void _checkFirestoreAdminStatus(User user) {
     if (user.email == null) return;
     final cleanEmail = user.email!.trim().toLowerCase();
@@ -79,6 +100,7 @@ class AuthProvider with ChangeNotifier {
         _user = credential.user;
         _isGuestMode = false;
         if (_user != null) {
+          await verifyAdminStatusDirect(_user!);
           _checkFirestoreAdminStatus(_user!);
         }
         _setLoading(false);
