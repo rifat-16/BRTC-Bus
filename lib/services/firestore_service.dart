@@ -2,6 +2,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/bus_model.dart';
 import '../models/ticket_model.dart';
 
+class RouteFareModel {
+  final String id;
+  final String from;
+  final String to;
+  final int fare;
+
+  RouteFareModel({
+    required this.id,
+    required this.from,
+    required this.to,
+    required this.fare,
+  });
+}
+
 class ScheduleSeatsData {
   final List<String> bookedSeats;
   final List<String> lockedSeats;
@@ -15,9 +29,24 @@ class ScheduleSeatsData {
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Collection References for dynamic seat locking & ticket creation
+  // Collection References
   CollectionReference get _busesRef => _db.collection('buses');
   CollectionReference get _ticketsRef => _db.collection('tickets');
+  CollectionReference get _routeFaresRef => _db.collection('route_fares');
+
+  // Official Default Route Fares (Station-to-Station)
+  static final List<RouteFareModel> officialRouteFares = [
+    RouteFareModel(id: 'dhaka_sakhipur', from: 'ঢাকা', to: 'সখিপুর', fare: 350),
+    RouteFareModel(id: 'sakhipur_dhaka', from: 'সখিপুর', to: 'ঢাকা', fare: 350),
+    RouteFareModel(id: 'dhaka_borochowna', from: 'ঢাকা', to: 'বড়চওনা', fare: 380),
+    RouteFareModel(id: 'borochowna_dhaka', from: 'বড়চওনা', to: 'ঢাকা', fare: 380),
+    RouteFareModel(id: 'dhaka_garobazar', from: 'ঢাকা', to: 'গারোবাজার', fare: 400),
+    RouteFareModel(id: 'garobazar_dhaka', from: 'গারোবাজার', to: 'ঢাকা', fare: 400),
+    RouteFareModel(id: 'dhaka_sagardighi', from: 'ঢাকা', to: 'সাগরদিঘী', fare: 400),
+    RouteFareModel(id: 'sagardighi_dhaka', from: 'সাগরদিঘী', to: 'ঢাকা', fare: 400),
+    RouteFareModel(id: 'sakhipur_borochowna', from: 'সখিপুর', to: 'বড়চওনা', fare: 100),
+    RouteFareModel(id: 'borochowna_sakhipur', from: 'বড়চওনা', to: 'সখিপুর', fare: 100),
+  ];
 
   // Exact 2 Physical Official BRTC AC Buses
   static final List<BusModel> officialBRTCBuses = [
@@ -70,6 +99,66 @@ class FirestoreService {
     ),
   ];
 
+  // Calculate fare dynamically based on station-to-station route pair
+  static int calculateRouteFare({
+    required String from,
+    required String to,
+    required List<RouteFareModel> faresList,
+    int defaultBusFare = 350,
+  }) {
+    final cleanFrom = from.replaceAll(RegExp(r'\([^)]*\)'), '').trim();
+    final cleanTo = to.replaceAll(RegExp(r'\([^)]*\)'), '').trim();
+
+    for (final rf in faresList) {
+      if ((cleanFrom.contains(rf.from) || rf.from.contains(cleanFrom)) &&
+          (cleanTo.contains(rf.to) || rf.to.contains(cleanTo))) {
+        return rf.fare;
+      }
+    }
+    return defaultBusFare;
+  }
+
+  // Stream of Station-to-Station Route Pair Fares
+  Stream<List<RouteFareModel>> getRouteFaresStream() {
+    return _routeFaresRef.snapshots().map((snapshot) {
+      final List<RouteFareModel> list = [];
+
+      for (final defaultFare in officialRouteFares) {
+        final docs = snapshot.docs.where((d) => d.id == defaultFare.id);
+        if (docs.isNotEmpty && docs.first.data() != null) {
+          final data = docs.first.data() as Map<String, dynamic>;
+          final dynamicFare = data['fare'] as int? ?? defaultFare.fare;
+          list.add(
+            RouteFareModel(
+              id: defaultFare.id,
+              from: defaultFare.from,
+              to: defaultFare.to,
+              fare: dynamicFare,
+            ),
+          );
+        } else {
+          list.add(defaultFare);
+        }
+      }
+
+      return list;
+    }).handleError((_) {
+      return officialRouteFares;
+    });
+  }
+
+  // Admin Action: Update Route Fare in Cloud Firestore
+  Future<void> updateRouteFare({
+    required String routeId,
+    required int newFare,
+  }) async {
+    final routeRef = _routeFaresRef.doc(routeId);
+    await routeRef.set({
+      'fare': newFare,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   // Helper filter method for strict directional location matching
   static List<BusModel> filterBusesList(
     List<BusModel> list, {
@@ -106,9 +195,57 @@ class FirestoreService {
     }).toList();
   }
 
-  // Pure Local Stream for Fixed Official BRTC Schedules
+  // Dynamic Stream for Buses with Real-time Firestore Route Pair Fare Integration
   Stream<List<BusModel>> getBusesStream({String? from, String? to}) {
-    return Stream.value(filterBusesList(officialBRTCBuses, from: from, to: to));
+    return _routeFaresRef.snapshots().map((snapshot) {
+      final List<RouteFareModel> activeFares = [];
+
+      for (final defaultFare in officialRouteFares) {
+        final docs = snapshot.docs.where((d) => d.id == defaultFare.id);
+        if (docs.isNotEmpty && docs.first.data() != null) {
+          final data = docs.first.data() as Map<String, dynamic>;
+          final dynamicFare = data['fare'] as int? ?? defaultFare.fare;
+          activeFares.add(
+            RouteFareModel(
+              id: defaultFare.id,
+              from: defaultFare.from,
+              to: defaultFare.to,
+              fare: dynamicFare,
+            ),
+          );
+        } else {
+          activeFares.add(defaultFare);
+        }
+      }
+
+      final List<BusModel> busesList = officialBRTCBuses.map((bus) {
+        int dynamicFare = bus.fare;
+        if (from != null && to != null) {
+          dynamicFare = calculateRouteFare(
+            from: from,
+            to: to,
+            faresList: activeFares,
+            defaultBusFare: bus.fare,
+          );
+        }
+
+        return BusModel(
+          id: bus.id,
+          busName: bus.busName,
+          from: bus.from,
+          to: bus.to,
+          route: bus.route,
+          departureTime: bus.departureTime,
+          arrivalTime: bus.arrivalTime,
+          fare: dynamicFare,
+          totalSeats: bus.totalSeats,
+        );
+      }).toList();
+
+      return filterBusesList(busesList, from: from, to: to);
+    }).handleError((_) {
+      return filterBusesList(officialBRTCBuses, from: from, to: to);
+    });
   }
 
   // Get real-time stream of schedule seats (both booked and locked seats)
