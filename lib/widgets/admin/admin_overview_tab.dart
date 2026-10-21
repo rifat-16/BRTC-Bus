@@ -219,8 +219,8 @@ class AdminOverviewTab extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => RevenueAnalyticsScreen(
+                    createSmoothPageRoute(
+                      RevenueAnalyticsScreen(
                         initialTickets: confirmedTickets,
                       ),
                     ),
@@ -253,9 +253,7 @@ class AdminOverviewTab extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const BusManifestScreen(),
-                ),
+                createSmoothPageRoute(const BusManifestScreen()),
               );
             },
             borderRadius: BorderRadius.circular(20),
@@ -342,8 +340,8 @@ class AdminOverviewTab extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => RevenueAnalyticsScreen(
+                      createSmoothPageRoute(
+                        RevenueAnalyticsScreen(
                           initialTickets: confirmedTickets,
                         ),
                       ),
@@ -360,9 +358,7 @@ class AdminOverviewTab extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const BusManifestScreen(),
-                      ),
+                      createSmoothPageRoute(const BusManifestScreen()),
                     );
                   },
                 ),
