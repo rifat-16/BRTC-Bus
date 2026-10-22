@@ -200,7 +200,7 @@ class AdminOverviewTab extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.5,
+            childAspectRatio: 1.35,
             children: [
               _buildMetricCard(
                 title: 'পেন্ডিং রিকোয়েস্ট',

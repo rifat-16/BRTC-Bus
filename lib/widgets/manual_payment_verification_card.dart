@@ -54,26 +54,28 @@ class ManualPaymentVerificationCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'সহজ পেমেন্ট নির্দেশনা ($methodUpper)',
-                    style: const TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'সহজ পেমেন্ট নির্দেশনা ($methodUpper)',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'নিচের ধাপগুলো অনুসরণ করে মূল্য পরিশোধ করুন',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: 2),
+                    const Text(
+                      'নিচের ধাপগুলো অনুসরণ করে মূল্য পরিশোধ করুন',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -100,7 +102,7 @@ class ManualPaymentVerificationCard extends StatelessWidget {
                     Text(
                       'ধাপ ১: BKASH পার্সোনাল নম্বর',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.bold,
                         color: Colors.orange.shade900,
                       ),
@@ -108,7 +110,7 @@ class ManualPaymentVerificationCard extends StatelessWidget {
                     Text(
                       'মোট ৳ $totalAmount',
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w900,
                         color: AppColors.primaryRed,
                       ),
@@ -121,7 +123,7 @@ class ManualPaymentVerificationCard extends StatelessWidget {
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
+                            horizontal: 10, vertical: 10),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
@@ -130,22 +132,25 @@ class ManualPaymentVerificationCard extends StatelessWidget {
                         child: Row(
                           children: [
                             const Icon(Icons.phone_android_rounded,
-                                size: 18, color: Colors.grey),
-                            const SizedBox(width: 10),
-                            Text(
-                              paymentNumber,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
-                                color: AppColors.textPrimary,
+                                size: 16, color: Colors.grey),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                paymentNumber,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                  color: AppColors.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: paymentNumber));
@@ -161,14 +166,15 @@ class ManualPaymentVerificationCard extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.copy_rounded, size: 16),
-                      label: const Text('কপি করুন'),
+                      icon: const Icon(Icons.copy_rounded, size: 15),
+                      label: const Text('কপি করুন',
+                          style: TextStyle(fontSize: 12)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryGreen,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
+                          horizontal: 10,
                           vertical: 12,
                         ),
                         shape: RoundedRectangleBorder(
@@ -196,7 +202,7 @@ class ManualPaymentVerificationCard extends StatelessWidget {
             stepNumber: '৩',
             title: 'TrxID টি এখানে লিখুন',
             description:
-                'টাকা পাঠানোর পর বিকাশ/নগদ থেকে আসা কনফার্মেশন এসএমএস (SMS) এ একটি TrxID পাবেন। সেটি কপি করে নিচের বক্সে লিখুন।',
+                'টাকা পাঠানোর পর বিকাশ থেকে আসা কনফার্মেশন এসএমএস (SMS) এ একটি TrxID পাবেন। সেটি কপি করে নিচের বক্সে লিখুন।',
           ),
 
           const SizedBox(height: 22),

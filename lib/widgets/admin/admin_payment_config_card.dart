@@ -172,40 +172,46 @@ class AdminPaymentConfigCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE2136E).withAlpha(20),
-                            borderRadius: BorderRadius.circular(10),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2136E).withAlpha(20),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.phone_android_rounded,
+                              color: Color(0xFFE2136E),
+                              size: 20,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.phone_android_rounded,
-                            color: Color(0xFFE2136E),
-                            size: 20,
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'পেমেন্ট নম্বর সেটিংস',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'পেমেন্ট নম্বর সেটিংস (Payment Settings)',
-                          style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 6),
                     OutlinedButton.icon(
-                      icon: const Icon(Icons.edit_rounded, size: 15),
-                      label: const Text('পরিবর্তন করুন',
-                          style: TextStyle(fontSize: 11.5)),
+                      icon: const Icon(Icons.edit_rounded, size: 14),
+                      label: const Text('পরিবর্তন',
+                          style: TextStyle(fontSize: 11)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFE2136E),
                         side: const BorderSide(color: Color(0xFFE2136E)),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                            horizontal: 8, vertical: 4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

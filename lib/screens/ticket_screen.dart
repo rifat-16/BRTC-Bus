@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import '../core/app_colors.dart';
 import '../models/ticket_model.dart';
+import '../services/download_service.dart';
 import '../services/firestore_service.dart';
 import '../widgets/official_e_ticket_stub.dart';
 import 'home_screen.dart';
@@ -85,7 +86,7 @@ class _TicketScreenState extends State<TicketScreen> {
   void _showImagePreviewDialog(Uint8List imageBytes) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         title: const Row(
@@ -118,7 +119,7 @@ class _TicketScreenState extends State<TicketScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'টিকিটটি আপনার ফোনের গ্যালারিতে সেভ করার জন্য প্রস্তুত রয়েছে। সেভ বাটনে চাপ দিন।',
+                  'টিকিটটি আপনার ফোনের গ্যালারিতে ডাউনলোডের জন্য প্রস্তুত। ডাউনলোড বাটনে চাপ দিন।',
                   style:
                       TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
@@ -129,12 +130,12 @@ class _TicketScreenState extends State<TicketScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('বন্ধ করুন'),
           ),
           ElevatedButton.icon(
             icon: const Icon(Icons.download_rounded, size: 18),
-            label: const Text('গ্যালারিতে সেভ করুন'),
+            label: const Text('ডাউনলোড করুন'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryGreen,
               foregroundColor: Colors.white,
@@ -142,24 +143,30 @@ class _TicketScreenState extends State<TicketScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Row(
-                    children: [
-                      Icon(Icons.check_circle_rounded, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('টিকিটটি ছবি হিসেবে সফলভাবে সেভ করা হয়েছে!'),
-                    ],
-                  ),
-                  backgroundColor: AppColors.primaryGreen,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await DownloadService.downloadImage(
+                imageBytes,
+                'BRTC_Ticket_${widget.ticketId}.png',
               );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.check_circle_rounded, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('টিকিটটি সফলভাবে ডাউনলোড করা হয়েছে!'),
+                      ],
+                    ),
+                    backgroundColor: AppColors.primaryGreen,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+              }
             },
           ),
         ],
