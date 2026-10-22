@@ -479,23 +479,15 @@ class _LoginScreenState extends State<LoginScreen>
                                           ),
                                         ),
                                       )
-                                    : Row(
+                                    : const Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey.shade50,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: Colors.grey.shade200,
-                                              ),
-                                            ),
-                                            child: const _GoogleGLogo(size: 22),
-                                          ),
-                                          const SizedBox(width: 14),
-                                          const Text(
+                                          _GoogleGLogo(size: 22),
+                                          SizedBox(width: 12),
+                                          Text(
                                             'Continue with Google',
                                             style: TextStyle(
                                               fontSize: 16,

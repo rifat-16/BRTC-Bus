@@ -183,13 +183,21 @@ class _AdminSeatManagerTabState extends State<AdminSeatManagerTab> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.lock_rounded, size: 18),
+                        icon: const Icon(Icons.lock_rounded, size: 16),
                         label: Text(
-                            'ম্যানুয়ালি লক করুন (${_manualSelectedSeats.length})'),
+                          'ম্যানুয়ালি লক (${_manualSelectedSeats.length})',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange.shade800,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 6),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -218,16 +226,24 @@ class _AdminSeatManagerTabState extends State<AdminSeatManagerTab> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.lock_open_rounded, size: 18),
+                        icon: const Icon(Icons.lock_open_rounded, size: 16),
                         label: Text(
-                            'সিট মুক্ত করুন (${_manualSelectedSeats.length})'),
+                          'সিট মুক্ত করুন (${_manualSelectedSeats.length})',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryGreen,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 6),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),

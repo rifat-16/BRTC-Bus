@@ -255,12 +255,21 @@ class _AdminPendingTabState extends State<AdminPendingTab> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        icon: const Icon(Icons.cancel_rounded, size: 18),
-                        label: const Text('বাতিল করুন'),
+                        icon: const Icon(Icons.cancel_rounded, size: 16),
+                        label: const Text(
+                          'বাতিল করুন',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.primaryRed,
                           side: const BorderSide(color: AppColors.primaryRed),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 6),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -268,16 +277,25 @@ class _AdminPendingTabState extends State<AdminPendingTab> {
                         onPressed: () => _rejectTicket(ticket),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.check_circle_rounded, size: 18),
-                        label: const Text('অনুমোদন করুন'),
+                        icon: const Icon(Icons.check_circle_rounded, size: 16),
+                        label: const Text(
+                          'অনুমোদন করুন',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryGreen,
                           foregroundColor: Colors.white,
                           elevation: 2,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 6),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
