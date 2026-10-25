@@ -49,8 +49,8 @@ class AppColors {
 
 Route<T> createSmoothPageRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
-    transitionDuration: const Duration(milliseconds: 320),
-    reverseTransitionDuration: const Duration(milliseconds: 280),
+    transitionDuration: const Duration(milliseconds: 420),
+    reverseTransitionDuration: const Duration(milliseconds: 320),
     pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       final curvedAnimation = CurvedAnimation(
@@ -58,14 +58,24 @@ Route<T> createSmoothPageRoute<T>(Widget page) {
         curve: Curves.easeOutCubic,
         reverseCurve: Curves.easeInCubic,
       );
+      final scaleAnimation = Tween<double>(begin: 0.93, end: 1.0).animate(
+        CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutBack,
+          reverseCurve: Curves.easeInCubic,
+        ),
+      );
       return FadeTransition(
         opacity: curvedAnimation,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0.05, 0),
-            end: Offset.zero,
-          ).animate(curvedAnimation),
-          child: child,
+        child: ScaleTransition(
+          scale: scaleAnimation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.05),
+              end: Offset.zero,
+            ).animate(curvedAnimation),
+            child: child,
+          ),
         ),
       );
     },

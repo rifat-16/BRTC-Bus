@@ -31,24 +31,27 @@ class BusSeatPlanWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.grey.shade200, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.grey.shade200, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(10),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
+          child: Column(
         children: [
           // Driver & Gate Cockpit Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.backgroundColor,
               borderRadius: const BorderRadius.vertical(
@@ -106,11 +109,11 @@ class BusSeatPlanWidget extends StatelessWidget {
             ),
           ),
 
-          // Scrollable 45-Seat Grid with Hard Edge Clipping
+          // Scrollable 45-Seat Grid with Window-to-Window Full Width Alignment
           Expanded(
             child: SingleChildScrollView(
               clipBehavior: Clip.hardEdge,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
@@ -129,7 +132,7 @@ class BusSeatPlanWidget extends StatelessWidget {
                                 isSelected: selectedSeats.contains('${rowLabel}1'),
                                 onTap: () => onSeatTap('${rowLabel}1'),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               SeatWidget(
                                 seatId: '${rowLabel}2',
                                 isBooked: bookedSeats.contains('${rowLabel}2'),
@@ -156,7 +159,7 @@ class BusSeatPlanWidget extends StatelessWidget {
                                 isSelected: selectedSeats.contains('${rowLabel}3'),
                                 onTap: () => onSeatTap('${rowLabel}3'),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               SeatWidget(
                                 seatId: '${rowLabel}4',
                                 isBooked: bookedSeats.contains('${rowLabel}4'),
@@ -221,6 +224,8 @@ class BusSeatPlanWidget extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 }

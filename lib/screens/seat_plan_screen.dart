@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
+import '../models/bus_model.dart';
+import '../providers/booking_provider.dart';
 import '../services/firestore_service.dart';
 import '../widgets/bus_seat_plan_widget.dart';
+import '../widgets/desktop_web_navbar.dart';
+import '../widgets/responsive_layout.dart';
 import 'checkout_screen.dart';
 
 class SeatPlanScreen extends StatefulWidget {
@@ -31,8 +36,6 @@ class SeatPlanScreen extends StatefulWidget {
 class _SeatPlanScreenState extends State<SeatPlanScreen>
     with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
-
-  final List<String> _selectedSeats = [];
   final int _maxSeatsAllowed = 4;
 
   late AnimationController _entranceController;
@@ -108,149 +111,442 @@ class _SeatPlanScreenState extends State<SeatPlanScreen>
     super.dispose();
   }
 
-  void _toggleSeat(String seatId, List<String> bookedSeats, List<String> lockedSeats) {
+  void _toggleSeat(
+    String seatId,
+    List<String> bookedSeats,
+    List<String> lockedSeats,
+    BookingProvider bookingProvider,
+  ) {
     if (bookedSeats.contains(seatId) || lockedSeats.contains(seatId)) return;
 
-    setState(() {
-      if (_selectedSeats.contains(seatId)) {
-        _selectedSeats.remove(seatId);
-      } else {
-        if (_selectedSeats.length < _maxSeatsAllowed) {
-          _selectedSeats.add(seatId);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('আপনি সর্বোচ্চ ৪টি সিট নির্বাচন করতে পারবেন'),
-              backgroundColor: AppColors.primaryRed,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-          );
-        }
-      }
-    });
+    if (!bookingProvider.selectedSeats.contains(seatId) &&
+        bookingProvider.selectedSeats.length >= _maxSeatsAllowed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('আপনি সর্বোচ্চ ৪টি সিট নির্বাচন করতে পারবেন'),
+          backgroundColor: AppColors.primaryRed,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
+    bookingProvider.toggleSeat(seatId, maxSeats: _maxSeatsAllowed);
   }
 
   @override
   Widget build(BuildContext context) {
+    final bookingProvider = context.watch<BookingProvider>();
+
+    if (bookingProvider.selectedBus?.id != widget.busId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        bookingProvider.selectBus(
+          BusModel(
+            id: widget.busId,
+            busName: widget.busName,
+            from: widget.from,
+            to: widget.to,
+            route: '${widget.from}-${widget.to}',
+            departureTime: widget.departureTime,
+            arrivalTime: '',
+            fare: widget.fare,
+            totalSeats: 45,
+          ),
+        );
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: AppColors.darkHeaderGradient,
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(24),
-              ),
-            ),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 4,
-          shadowColor: Colors.black26,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.busName,
-                style: const TextStyle(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+      appBar: ResponsiveLayout.isDesktop(context)
+          ? const DesktopWebNavbar()
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(70),
+              child: AppBar(
+                flexibleSpace: Container(
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.darkHeaderGradient,
+                    borderRadius: BorderRadius.vertical(
+                      bottom: Radius.circular(24),
+                    ),
+                  ),
+                ),
+                backgroundColor: Colors.transparent,
+                elevation: 4,
+                shadowColor: Colors.black26,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.busName,
+                      style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${widget.from} ➔ ${widget.to} (${widget.journeyDate})',
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                '${widget.from} ➔ ${widget.to} (${widget.journeyDate})',
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
       body: StreamBuilder<ScheduleSeatsData>(
         stream: _firestoreService.getScheduleSeatsStream(
           busId: widget.busId,
           journeyDate: widget.journeyDate,
         ),
         builder: (context, snapshot) {
-          final seatsData = snapshot.data ?? ScheduleSeatsData(bookedSeats: [], lockedSeats: []);
+          final seatsData = snapshot.data ??
+              ScheduleSeatsData(bookedSeats: [], lockedSeats: []);
           final List<String> bookedSeats = seatsData.bookedSeats;
           final List<String> lockedSeats = seatsData.lockedSeats;
 
-          return Column(
-            children: [
-              // Animated Legend Bar with 4 Clear Seat Indicators
-              SlideTransition(
-                position: _headerSlide,
-                child: FadeTransition(
-                  opacity: _headerFade,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(10),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildIndicator(Colors.white, 'Available', isBorder: true),
-                        _buildIndicator(AppColors.primaryGreen, 'Selected'),
-                        _buildIndicator(Colors.orange.shade800, 'Locked', icon: Icons.lock_rounded),
-                        _buildIndicator(AppColors.primaryRed, 'Booked'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Reusable Bus Interior Seat Plan Component
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: ScaleTransition(
-                    scale: _busBodyScale,
-                    child: FadeTransition(
-                      opacity: _busBodyFade,
-                      child: BusSeatPlanWidget(
-                        bookedSeats: bookedSeats,
-                        lockedSeats: lockedSeats,
-                        selectedSeats: _selectedSeats,
-                        onSeatTap: (seatId) => _toggleSeat(seatId, bookedSeats, lockedSeats),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Bottom Total & Action Section
-              SlideTransition(
-                position: _bottomSlide,
-                child: FadeTransition(
-                  opacity: _bottomFade,
-                  child: _buildBottomSection(),
-                ),
-              ),
-            ],
+          return ResponsiveLayout(
+            mobile: _buildMobileLayout(
+              bookedSeats,
+              lockedSeats,
+              bookingProvider,
+            ),
+            desktop: _buildDesktopLayout(
+              bookedSeats,
+              lockedSeats,
+              bookingProvider,
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildIndicator(Color color, String text, {bool isBorder = false, IconData? icon}) {
+  Widget _buildMobileLayout(
+    List<String> bookedSeats,
+    List<String> lockedSeats,
+    BookingProvider bookingProvider,
+  ) {
+    return Column(
+      children: [
+        // Legend Bar
+        SlideTransition(
+          position: _headerSlide,
+          child: FadeTransition(
+            opacity: _headerFade,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(10),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildIndicator(Colors.white, 'Available', isBorder: true),
+                  _buildIndicator(AppColors.primaryGreen, 'Selected'),
+                  _buildIndicator(Colors.orange.shade800, 'Locked',
+                      icon: Icons.lock_rounded),
+                  _buildIndicator(AppColors.primaryRed, 'Booked'),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Bus Seat Grid
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: ScaleTransition(
+              scale: _busBodyScale,
+              child: FadeTransition(
+                opacity: _busBodyFade,
+                child: BusSeatPlanWidget(
+                  bookedSeats: bookedSeats,
+                  lockedSeats: lockedSeats,
+                  selectedSeats: bookingProvider.selectedSeats,
+                  onSeatTap: (seatId) => _toggleSeat(
+                    seatId,
+                    bookedSeats,
+                    lockedSeats,
+                    bookingProvider,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Bottom Total & Action
+        SlideTransition(
+          position: _bottomSlide,
+          child: FadeTransition(
+            opacity: _bottomFade,
+            child: _buildBottomSection(bookingProvider),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopLayout(
+    List<String> bookedSeats,
+    List<String> lockedSeats,
+    BookingProvider bookingProvider,
+  ) {
+    final selectedSeats = bookingProvider.selectedSeats;
+    final int totalPrice = selectedSeats.length * widget.fare;
+
+    return SingleChildScrollView(
+      child: ConstrainedWebContainer(
+        padding: const EdgeInsets.all(28),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left Column: Bus Seat Plan (50% Width)
+            Expanded(
+              flex: 50,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.grey.shade300),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(8),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Legend
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 360),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundColor,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildIndicator(Colors.white, 'Available',
+                                  isBorder: true),
+                              _buildIndicator(
+                                  AppColors.primaryGreen, 'Selected'),
+                              _buildIndicator(
+                                  Colors.orange.shade800, 'Locked',
+                                  icon: Icons.lock_rounded),
+                              _buildIndicator(AppColors.primaryRed, 'Booked'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 520,
+                      child: BusSeatPlanWidget(
+                        bookedSeats: bookedSeats,
+                        lockedSeats: lockedSeats,
+                        selectedSeats: selectedSeats,
+                        onSeatTap: (seatId) => _toggleSeat(
+                          seatId,
+                          bookedSeats,
+                          lockedSeats,
+                          bookingProvider,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 28),
+
+            // Right Column: Trip Summary & Proceed Card (50% Width)
+            Expanded(
+              flex: 50,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                          color: AppColors.primaryRed.withAlpha(40)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(8),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryRed.withAlpha(20),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.directions_bus_filled_rounded,
+                                color: AppColors.primaryRed,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.busName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primaryRed,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${widget.from} ➔ ${widget.to} (${widget.journeyDate})',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 18),
+                          child: Divider(height: 1),
+                        ),
+                        _buildDesktopSummaryRow(
+                            'প্রতি সিটের ভাড়া', '৳ ${widget.fare}'),
+                        const SizedBox(height: 12),
+                        _buildDesktopSummaryRow(
+                          'নির্বাচিত সিটসমূহ',
+                          selectedSeats.isEmpty
+                              ? 'কোনোটি নয়'
+                              : selectedSeats.join(', '),
+                          isBold: true,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDesktopSummaryRow(
+                          'সর্বমোট প্রদেয় মূল্য',
+                          '৳ $totalPrice',
+                          isPrice: true,
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: selectedSeats.isEmpty
+                                ? null
+                                : () {
+                                    Navigator.push(
+                                      context,
+                                      createSmoothPageRoute(
+                                        CheckoutScreen(
+                                          busId: widget.busId,
+                                          busName: widget.busName,
+                                          from: widget.from,
+                                          to: widget.to,
+                                          journeyDate: widget.journeyDate,
+                                          departureTime: widget.departureTime,
+                                          selectedSeats: selectedSeats,
+                                          totalAmount: totalPrice,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryGreen,
+                              disabledBackgroundColor: Colors.grey.shade300,
+                              elevation: selectedSeats.isEmpty ? 0 : 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: const Text(
+                              'Continue to Checkout',
+                              style: TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopSummaryRow(String label, String value,
+      {bool isBold = false, bool isPrice = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13.5,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isPrice ? 22 : 15,
+            fontWeight:
+                (isBold || isPrice) ? FontWeight.w900 : FontWeight.bold,
+            color: isPrice ? AppColors.primaryRed : AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIndicator(Color color, String text,
+      {bool isBorder = false, IconData? icon}) {
     return Row(
       children: [
         Container(
@@ -278,8 +574,9 @@ class _SeatPlanScreenState extends State<SeatPlanScreen>
     );
   }
 
-  Widget _buildBottomSection() {
-    final int totalPrice = _selectedSeats.length * widget.fare;
+  Widget _buildBottomSection(BookingProvider bookingProvider) {
+    final selectedSeats = bookingProvider.selectedSeats;
+    final int totalPrice = selectedSeats.length * widget.fare;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -311,10 +608,10 @@ class _SeatPlanScreenState extends State<SeatPlanScreen>
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       child: Text(
-                        _selectedSeats.isEmpty
+                        selectedSeats.isEmpty
                             ? 'None'
-                            : _selectedSeats.join(', '),
-                        key: ValueKey(_selectedSeats.join(',')),
+                            : selectedSeats.join(', '),
+                        key: ValueKey(selectedSeats.join(',')),
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 17,
@@ -352,20 +649,20 @@ class _SeatPlanScreenState extends State<SeatPlanScreen>
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: _selectedSeats.isEmpty
+                onPressed: selectedSeats.isEmpty
                     ? null
                     : () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => CheckoutScreen(
+                          createSmoothPageRoute(
+                            CheckoutScreen(
                               busId: widget.busId,
                               busName: widget.busName,
                               from: widget.from,
                               to: widget.to,
                               journeyDate: widget.journeyDate,
                               departureTime: widget.departureTime,
-                              selectedSeats: _selectedSeats,
+                              selectedSeats: selectedSeats,
                               totalAmount: totalPrice,
                             ),
                           ),
@@ -374,7 +671,7 @@ class _SeatPlanScreenState extends State<SeatPlanScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   disabledBackgroundColor: Colors.grey.shade300,
-                  elevation: _selectedSeats.isEmpty ? 0 : 3,
+                  elevation: selectedSeats.isEmpty ? 0 : 3,
                   shadowColor: AppColors.primaryGreen.withAlpha(80),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),

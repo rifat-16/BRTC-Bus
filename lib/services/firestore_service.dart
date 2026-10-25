@@ -285,7 +285,7 @@ class FirestoreService {
       return ScheduleSeatsData(bookedSeats: booked, lockedSeats: locked);
     }).handleError((_) {
       return ScheduleSeatsData(bookedSeats: [], lockedSeats: []);
-    });
+    }).asBroadcastStream();
   }
 
   // Legacy Stream method for backward compatibility

@@ -7,7 +7,9 @@ import '../core/app_colors.dart';
 import '../models/ticket_model.dart';
 import '../services/download_service.dart';
 import '../services/firestore_service.dart';
+import '../widgets/desktop_web_navbar.dart';
 import '../widgets/official_e_ticket_stub.dart';
+import '../widgets/responsive_layout.dart';
 import 'home_screen.dart';
 
 class TicketScreen extends StatefulWidget {
@@ -119,7 +121,7 @@ class _TicketScreenState extends State<TicketScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'টিকিটটি আপনার ফোনের গ্যালারিতে ডাউনলোডের জন্য প্রস্তুত। ডাউনলোড বাটনে চাপ দিন।',
+                  'টিকিটটি আপনার গ্যালারিতে ডাউনলোডের জন্য প্রস্তুত। ডাউনলোড বাটনে চাপ দিন।',
                   style:
                       TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
@@ -203,160 +205,371 @@ class _TicketScreenState extends State<TicketScreen> {
     final String journeyDateAndDepartureTime =
         _formatJourneyDateTime(widget.journeyDate, widget.departureTime);
 
+    final isDesktop = ResponsiveLayout.isDesktop(context);
+
     return Scaffold(
-      backgroundColor: AppColors.primaryRedDark,
-      appBar: AppBar(
-        title: const Text('BRTC Ticket Status'),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
+      backgroundColor:
+          isDesktop ? AppColors.backgroundColor : AppColors.primaryRedDark,
+      appBar: isDesktop
+          ? const DesktopWebNavbar()
+          : AppBar(
+              title: const Text('BRTC Ticket Status'),
+              centerTitle: true,
+              automaticallyImplyLeading: false,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+            ),
       body: StreamBuilder<TicketModel?>(
         stream: _firestoreService.getTicketStream(widget.ticketId),
         builder: (context, snapshot) {
           final liveTicket = snapshot.data;
-          final currentStatus =
-              liveTicket?.status ?? widget.initialStatus;
+          final currentStatus = liveTicket?.status ?? widget.initialStatus;
 
           final bool isPending = currentStatus == 'PENDING';
           final bool isConfirmed = currentStatus == 'CONFIRMED';
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-            child: Column(
-              children: [
-                // Top Live Status Header Badge
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(25),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isPending
-                        ? Icons.hourglass_top_rounded
-                        : (isConfirmed
-                            ? Icons.check_circle_rounded
-                            : Icons.cancel_rounded),
-                    color: isPending
-                        ? AppColors.accentGold
-                        : (isConfirmed ? Colors.white : Colors.orangeAccent),
-                    size: 64,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  isPending
-                      ? 'Payment Pending Approval'
-                      : (isConfirmed
-                          ? 'Booking Confirmed!'
-                          : 'Payment Verification Failed'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  isPending
-                      ? 'আপনার পেমেন্ট তথ্য এডমিন প্যানেলে ভেরিফিকেশন করা হচ্ছে'
-                      : (isConfirmed
-                          ? 'আপনার বিআরটিসি টিকিট সফলভাবে অনুমোদিত হয়েছে'
-                          : 'আপনার ট্রানজেকশন তথ্য মিল পাওয়া যায়নি'),
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-
-                // RepaintBoundary wrapping Official E-Ticket Stub
-                RepaintBoundary(
-                  key: _ticketKey,
-                  child: OfficialETicketStub(
-                    ticketId: widget.ticketId,
-                    passengerName: widget.passengerName,
-                    phoneNumber: widget.phoneNumber,
-                    busName: widget.busName,
-                    from: widget.from,
-                    to: widget.to,
-                    journeyDateAndDepartureTime: journeyDateAndDepartureTime,
-                    seats: widget.seats,
-                    amountPaid: widget.amountPaid,
-                    issueDateTime: issueDateTime,
-                    currentStatus: currentStatus,
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.home_rounded, size: 20),
-                        label: const Text('হোমে যান'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white, width: 1.5),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HomeScreen(),
-                            ),
-                            (route) => false,
-                          );
-                        },
-                      ),
-                    ),
-                    if (isConfirmed) ...[
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: _isSaving
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.primaryRed,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.download_rounded, size: 20),
-                          label: Text(
-                            _isSaving ? 'সেভ হচ্ছে...' : 'টিকিট সেভ করুন',
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primaryRed,
-                            elevation: 3,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            textStyle: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          onPressed: _isSaving ? null : _captureAndSaveTicket,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
+          return ResponsiveLayout(
+            mobile: _buildMobileLayout(
+              issueDateTime,
+              journeyDateAndDepartureTime,
+              currentStatus,
+              isPending,
+              isConfirmed,
+            ),
+            desktop: _buildDesktopLayout(
+              issueDateTime,
+              journeyDateAndDepartureTime,
+              currentStatus,
+              isPending,
+              isConfirmed,
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(
+    String issueDateTime,
+    String journeyDateAndDepartureTime,
+    String currentStatus,
+    bool isPending,
+    bool isConfirmed,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+      child: Column(
+        children: [
+          // Top Live Status Header Badge
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(25),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isPending
+                  ? Icons.hourglass_top_rounded
+                  : (isConfirmed
+                      ? Icons.check_circle_rounded
+                      : Icons.cancel_rounded),
+              color: isPending
+                  ? AppColors.accentGold
+                  : (isConfirmed ? Colors.white : Colors.orangeAccent),
+              size: 64,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isPending
+                ? 'Payment Pending Approval'
+                : (isConfirmed
+                    ? 'Booking Confirmed!'
+                    : 'Payment Verification Failed'),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isPending
+                ? 'আপনার পেমেন্ট তথ্য এডমিন প্যানেলে ভেরিফিকেশন করা হচ্ছে'
+                : (isConfirmed
+                    ? 'আপনার বিআরটিসি টিকিট সফলভাবে অনুমোদিত হয়েছে'
+                    : 'আপনার ট্রানজেকশন তথ্য মিল পাওয়া যায়নি'),
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+
+          // RepaintBoundary wrapping Official E-Ticket Stub
+          RepaintBoundary(
+            key: _ticketKey,
+            child: OfficialETicketStub(
+              ticketId: widget.ticketId,
+              passengerName: widget.passengerName,
+              phoneNumber: widget.phoneNumber,
+              busName: widget.busName,
+              from: widget.from,
+              to: widget.to,
+              journeyDateAndDepartureTime: journeyDateAndDepartureTime,
+              seats: widget.seats,
+              amountPaid: widget.amountPaid,
+              issueDateTime: issueDateTime,
+              currentStatus: currentStatus,
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // Action Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.home_rounded, size: 20),
+                  label: const Text('হোমে যান'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white, width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                ),
+              ),
+              if (isConfirmed) ...[
+                const SizedBox(width: 14),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryRed,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.download_rounded, size: 20),
+                    label: Text(
+                      _isSaving ? 'সেভ হচ্ছে...' : 'টিকিট সেভ করুন',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primaryRed,
+                      elevation: 3,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: _isSaving ? null : _captureAndSaveTicket,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(
+    String issueDateTime,
+    String journeyDateAndDepartureTime,
+    String currentStatus,
+    bool isPending,
+    bool isConfirmed,
+  ) {
+    return SingleChildScrollView(
+      child: ConstrainedWebContainer(
+        maxWidth: 850,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          children: [
+            // Desktop Status Hero Card
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+              decoration: BoxDecoration(
+                gradient: AppColors.darkHeaderGradient,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(20),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(30),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isPending
+                          ? Icons.hourglass_top_rounded
+                          : (isConfirmed
+                              ? Icons.check_circle_rounded
+                              : Icons.cancel_rounded),
+                      color: isPending
+                          ? AppColors.accentGold
+                          : (isConfirmed
+                              ? Colors.white
+                              : Colors.orangeAccent),
+                      size: 48,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isPending
+                              ? 'Payment Pending Approval'
+                              : (isConfirmed
+                                  ? 'Booking Confirmed!'
+                                  : 'Payment Verification Failed'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isPending
+                              ? 'আপনার পেমেন্ট তথ্য এডমিন প্যানেলে ভেরিফিকেশন করা হচ্ছে। খুব শীঘ্রই নিশ্চিত করা হবে।'
+                              : (isConfirmed
+                                  ? 'আপনার বিআরটিসি টিকিট সফলভাবে অনুমোদিত হয়েছে। ডাউনলোড করে সাথে রাখুন।'
+                                  : 'আপনার ট্রানজেকশন তথ্য মিল পাওয়া যায়নি। কাস্টমার কেয়ারে যোগাযোগ করুন।'),
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 13.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // RepaintBoundary wrapping Official E-Ticket Stub
+            RepaintBoundary(
+              key: _ticketKey,
+              child: OfficialETicketStub(
+                ticketId: widget.ticketId,
+                passengerName: widget.passengerName,
+                phoneNumber: widget.phoneNumber,
+                busName: widget.busName,
+                from: widget.from,
+                to: widget.to,
+                journeyDateAndDepartureTime: journeyDateAndDepartureTime,
+                seats: widget.seats,
+                amountPaid: widget.amountPaid,
+                issueDateTime: issueDateTime,
+                currentStatus: currentStatus,
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // Desktop Action Toolbar
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 200,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.home_rounded, size: 20),
+                    label: const Text('হোমে যান'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryRed,
+                      side: const BorderSide(
+                          color: AppColors.primaryRed, width: 1.8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomeScreen(),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ),
+                if (isConfirmed) ...[
+                  const SizedBox(width: 20),
+                  SizedBox(
+                    width: 220,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      icon: _isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.download_rounded, size: 20),
+                      label: Text(
+                        _isSaving ? 'সেভ হচ্ছে...' : 'টিকিট পিকচার ডাউনলোড',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGreen,
+                        foregroundColor: Colors.white,
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onPressed: _isSaving ? null : _captureAndSaveTicket,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

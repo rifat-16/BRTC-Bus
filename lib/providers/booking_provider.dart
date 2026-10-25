@@ -43,16 +43,17 @@ class BookingProvider with ChangeNotifier {
   }
 
   void selectBus(BusModel bus) {
+    if (_selectedBus?.id == bus.id) return;
     _selectedBus = bus;
     _selectedSeats.clear();
     notifyListeners();
   }
 
-  void toggleSeat(String seatId) {
+  void toggleSeat(String seatId, {int maxSeats = 4}) {
     if (_selectedSeats.contains(seatId)) {
       _selectedSeats.remove(seatId);
     } else {
-      if (_selectedSeats.length < 6) {
+      if (_selectedSeats.length < maxSeats) {
         _selectedSeats.add(seatId);
       }
     }
