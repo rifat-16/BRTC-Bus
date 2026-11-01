@@ -298,7 +298,7 @@ class FirestoreService {
     );
   }
 
-  // Book seats and write ticket directly to Cloud Firestore
+  // Book seats and write ticket directly to Cloud Firestore with 100% Atomic Concurrency Transaction
   Future<TicketModel> bookSeatsAndCreateTicket({
     required String busId,
     required TicketModel ticket,
@@ -314,21 +314,49 @@ class FirestoreService {
 
     final bool isConfirmed = ticket.status == 'CONFIRMED';
 
-    try {
-      await scheduleRef.set({
-        if (isConfirmed)
-          'bookedSeats': FieldValue.arrayUnion(ticket.selectedSeats)
-        else
-          'lockedSeats': FieldValue.arrayUnion(ticket.selectedSeats),
-        'lastUpdated': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+    // 100% Atomic Concurrency Transaction to prevent double-booking
+    await _db.runTransaction((transaction) async {
+      final scheduleSnapshot = await transaction.get(scheduleRef);
 
-      await newTicketRef.set(ticketMap);
-    } catch (e) {
-      try {
-        await newTicketRef.set(ticketMap);
-      } catch (_) {}
-    }
+      List<String> currentBooked = [];
+      List<String> currentLocked = [];
+
+      if (scheduleSnapshot.exists && scheduleSnapshot.data() != null) {
+        final data = scheduleSnapshot.data() as Map<String, dynamic>;
+        currentBooked = List<String>.from(data['bookedSeats'] ?? []);
+        currentLocked = List<String>.from(data['lockedSeats'] ?? []);
+      }
+
+      // Check if ANY requested seat is already booked or locked
+      final Set<String> occupied = {...currentBooked, ...currentLocked};
+      final conflictingSeats =
+          ticket.selectedSeats.where((s) => occupied.contains(s)).toList();
+
+      if (conflictingSeats.isNotEmpty) {
+        throw Exception(
+          'দুঃখিত, ${conflictingSeats.join(", ")} সিটটি ইতোমধ্যে অন্য একজন যাত্রী বুক করে ফেলেছেন! অনুগ্রহ করে অন্য সিট নির্বাচন করুন।',
+        );
+      }
+
+      // If all requested seats are available, update schedule document and create ticket atomically
+      if (isConfirmed) {
+        currentBooked.addAll(ticket.selectedSeats);
+      } else {
+        currentLocked.addAll(ticket.selectedSeats);
+      }
+
+      transaction.set(
+        scheduleRef,
+        {
+          'bookedSeats': currentBooked,
+          'lockedSeats': currentLocked,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      transaction.set(newTicketRef, ticketMap);
+    });
 
     return TicketModel(
       ticketId: newTicketRef.id.isNotEmpty
