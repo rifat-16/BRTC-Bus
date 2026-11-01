@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../models/route_fare_model.dart';
 import '../../services/firestore_service.dart';
+import '../responsive_layout.dart';
 
 class AdminRouteFareHub extends StatelessWidget {
   final FirestoreService firestoreService;
@@ -211,6 +212,8 @@ class AdminRouteFareHub extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveLayout.isDesktop(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -246,84 +249,107 @@ class AdminRouteFareHub extends StatelessWidget {
             final routeFares =
                 snapshot.data ?? FirestoreService.officialRouteFares;
 
+            if (isDesktop) {
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: routeFares.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisExtent: 80,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemBuilder: (context, index) {
+                  final route = routeFares[index];
+                  return _buildRouteFareCard(context, route);
+                },
+              );
+            }
+
             return Column(
               children: routeFares.map((route) {
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 1,
-                  child: Padding(
-                    padding: const EdgeInsets.all(14.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${route.from}  ➔  ${route.to}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: AppColors.primaryRed,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              const Text(
-                                'স্টেশন-টু-স্টেশন সরাসরি ভাড়া',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withAlpha(20),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '৳ ${route.fare}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.primaryGreen,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit_note_rounded,
-                                color: AppColors.primaryRed,
-                                size: 24,
-                              ),
-                              tooltip: 'ভাড়া পরিবর্তন করুন',
-                              onPressed: () =>
-                                  _showEditRouteFareDialog(context, route),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+                return _buildRouteFareCard(context, route);
               }).toList(),
             );
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildRouteFareCard(BuildContext context, RouteFareModel route) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${route.from}  ➔  ${route.to}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.5,
+                      color: AppColors.primaryRed,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'স্টেশন-টু-স্টেশন সরাসরি ভাড়া',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryGreen.withAlpha(20),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '৳ ${route.fare}',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryGreen,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(
+                    Icons.edit_note_rounded,
+                    color: AppColors.primaryRed,
+                    size: 22,
+                  ),
+                  tooltip: 'ভাড়া পরিবর্তন করুন',
+                  onPressed: () =>
+                      _showEditRouteFareDialog(context, route),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -6,6 +6,8 @@ import '../models/bus_model.dart';
 import '../models/ticket_model.dart';
 import '../services/firestore_service.dart';
 import '../services/pdf_service.dart';
+import '../widgets/desktop_web_navbar.dart';
+import '../widgets/responsive_layout.dart';
 
 class BusManifestScreen extends StatefulWidget {
   const BusManifestScreen({super.key});
@@ -35,141 +37,236 @@ class _BusManifestScreenState extends State<BusManifestScreen> {
   Widget build(BuildContext context) {
     final String formattedDate =
         DateFormat('dd MMM yyyy').format(_selectedDate);
+    final isDesktop = ResponsiveLayout.isDesktop(context);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      appBar: AppBar(
-        title: const Text('লাইভ বাস ট্রিপ ও যাত্রী ম্যানিফেস্ট'),
-        backgroundColor: AppColors.primaryRedDark,
-        elevation: 2,
-      ),
+      appBar: isDesktop
+          ? const DesktopWebNavbar()
+          : AppBar(
+              title: const Text('লাইভ বাস ট্রিপ ও যাত্রী ম্যানিফেস্ট'),
+              backgroundColor: AppColors.primaryRedDark,
+              elevation: 2,
+            ),
       body: StreamBuilder<List<TicketModel>>(
         stream: _firestoreService.getAllTicketsStream(),
         builder: (context, snapshot) {
           final allTickets = snapshot.data ?? [];
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Date Picker Selection Banner
+            child: ConstrainedWebContainer(
+              maxWidth: 1200,
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isDesktop) ...[
+                    // Desktop Header Box with Back Button
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: Colors.grey.shade300),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withAlpha(8),
                             blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
                             children: [
-                              const Text(
-                                'যাত্রার ম্যানিফেস্ট তারিখ:',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                              OutlinedButton.icon(
+                                icon: const Icon(Icons.arrow_back_rounded,
+                                    size: 18),
+                                label: const Text('ফিরে যান'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.primaryRed,
+                                  side: const BorderSide(
+                                      color: AppColors.primaryRed, width: 1.5),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
                                 ),
+                                onPressed: () => Navigator.pop(context),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                formattedDate,
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primaryRed,
-                                ),
+                              const SizedBox(width: 16),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'লাইভ বাস ট্রিপ ও যাত্রী ম্যানিফেস্ট',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primaryRed,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'দৈনিক ৪টি ট্রিপের সিট হিসাব, প্যাসেঞ্জার লিস্ট ও ওয়েবিল প্রিন্ট',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.calendar_month_rounded,
-                                size: 18),
-                            label: const Text('তারিখ পরিবর্তন'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryGreen,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryRed.withAlpha(15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'LIVE TRIP MANIFESTS',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryRed,
                               ),
                             ),
-                            onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: _selectedDate,
-                                firstDate: DateTime.now()
-                                    .subtract(const Duration(days: 30)),
-                                lastDate: DateTime.now()
-                                    .add(const Duration(days: 60)),
-                              );
-                              if (picked != null) {
-                                setState(() {
-                                  _selectedDate = picked;
-                                });
-                              }
-                            },
                           ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      'দৈনিক ৪টি ট্রিপের লাইভ স্ট্যাটাস (Trip Manifests):',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // List of all 4 Official BRTC Bus Trips
-                    ...FirestoreService.officialBRTCBuses.map((bus) {
-                      final tripTickets = allTickets.where((t) {
-                        if (t.journeyDate != formattedDate ||
-                            t.status == 'REJECTED') {
-                          return false;
-                        }
-
-                        // 1. Direct Exact Match by busId
-                        if (t.busId.isNotEmpty) {
-                          return t.busId == bus.id;
-                        }
-
-                        // 2. Strict Fallback Match by busName & Direction (Going vs Return)
-                        final bool busIsReturn = bus.busName.contains('ফিরতী');
-                        final bool ticketIsReturn = t.busName.contains('ফিরতী');
-
-                        if (busIsReturn != ticketIsReturn) {
-                          return false;
-                        }
-
-                        if (bus.id.contains('_1_')) {
-                          return t.busName.contains('1') || t.busName.contains('১');
-                        } else if (bus.id.contains('_2_')) {
-                          return t.busName.contains('2') || t.busName.contains('২');
-                        }
-
-                        return t.busName == bus.busName;
-                      }).toList();
-
-                      return _buildTripManifestCard(
-                        bus: bus,
-                        dateStr: formattedDate,
-                        tripTickets: tripTickets,
-                      );
-                    }),
+                    const SizedBox(height: 18),
                   ],
-                ),
-              );
+
+                  // Date Picker Selection Banner
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: Colors.grey.shade300),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(8),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'যাত্রার ম্যানিফেস্ট তারিখ:',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryRed,
+                              ),
+                            ),
+                          ],
+                        ),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.calendar_month_rounded,
+                              size: 18),
+                          label: const Text('তারিখ পরিবর্তন'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _selectedDate,
+                              firstDate: DateTime.now()
+                                  .subtract(const Duration(days: 30)),
+                              lastDate: DateTime.now()
+                                  .add(const Duration(days: 60)),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _selectedDate = picked;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  const Text(
+                    'দৈনিক ৪টি ট্রিপের লাইভ স্ট্যাটাস (Trip Manifests):',
+                    style:
+                        TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // List of all 4 Official BRTC Bus Trips
+                  ...FirestoreService.officialBRTCBuses.map((bus) {
+                    final tripTickets = allTickets.where((t) {
+                      if (t.journeyDate != formattedDate ||
+                          t.status == 'REJECTED') {
+                        return false;
+                      }
+
+                      // 1. Direct Exact Match by busId
+                      if (t.busId.isNotEmpty) {
+                        return t.busId == bus.id;
+                      }
+
+                      // 2. Strict Fallback Match by busName & Direction (Going vs Return)
+                      final bool busIsReturn = bus.busName.contains('ফিরতী');
+                      final bool ticketIsReturn = t.busName.contains('ফিরতী');
+
+                      if (busIsReturn != ticketIsReturn) {
+                        return false;
+                      }
+
+                      if (bus.id.contains('_1_')) {
+                        return t.busName.contains('1') ||
+                            t.busName.contains('১');
+                      } else if (bus.id.contains('_2_')) {
+                        return t.busName.contains('2') ||
+                            t.busName.contains('২');
+                      }
+
+                      return t.busName == bus.busName;
+                    }).toList();
+
+                    return _buildTripManifestCard(
+                      bus: bus,
+                      dateStr: formattedDate,
+                      tripTickets: tripTickets,
+                    );
+                  }),
+                ],
+              ),
+            ),
+          );
         },
       ),
     );
@@ -186,8 +283,8 @@ class _BusManifestScreenState extends State<BusManifestScreen> {
         journeyDate: dateStr,
       ),
       builder: (context, snapshot) {
-        final seatsData =
-            snapshot.data ?? ScheduleSeatsData(bookedSeats: [], lockedSeats: []);
+        final seatsData = snapshot.data ??
+            ScheduleSeatsData(bookedSeats: [], lockedSeats: []);
 
         final Set<String> occupiedSeatIds = {
           ...seatsData.bookedSeats,
@@ -214,6 +311,7 @@ class _BusManifestScreenState extends State<BusManifestScreen> {
             side: BorderSide(color: statusColor.withAlpha(80), width: 1.5),
           ),
           elevation: 2,
+          shadowColor: Colors.black.withAlpha(10),
           child: ExpansionTile(
             shape: const Border(),
             tilePadding:
@@ -329,7 +427,7 @@ class _BusManifestScreenState extends State<BusManifestScreen> {
                                 side: const BorderSide(
                                     color: AppColors.primaryRed),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 6),
+                                    horizontal: 10, vertical: 8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -358,7 +456,8 @@ class _BusManifestScreenState extends State<BusManifestScreen> {
                             child: const Text(
                               'এই ট্রিপে এখন পর্যন্ত কোনো অনলাইন/কাউন্টার টিকিট বিক্রি হয়নি।',
                               style: TextStyle(
-                                  fontSize: 12, color: AppColors.textSecondary),
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary),
                               textAlign: TextAlign.center,
                             ),
                           )
@@ -377,8 +476,8 @@ class _BusManifestScreenState extends State<BusManifestScreen> {
                                 decoration: BoxDecoration(
                                   color: AppColors.backgroundColor,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: Colors.grey.shade300),
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
                                 ),
                                 child: Row(
                                   mainAxisAlignment:

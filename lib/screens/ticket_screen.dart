@@ -401,83 +401,10 @@ class _TicketScreenState extends State<TicketScreen> {
   ) {
     return SingleChildScrollView(
       child: ConstrainedWebContainer(
-        maxWidth: 850,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        maxWidth: 600,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           children: [
-            // Desktop Status Hero Card
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-              decoration: BoxDecoration(
-                gradient: AppColors.darkHeaderGradient,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(20),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(30),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isPending
-                          ? Icons.hourglass_top_rounded
-                          : (isConfirmed
-                              ? Icons.check_circle_rounded
-                              : Icons.cancel_rounded),
-                      color: isPending
-                          ? AppColors.accentGold
-                          : (isConfirmed
-                              ? Colors.white
-                              : Colors.orangeAccent),
-                      size: 48,
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isPending
-                              ? 'Payment Pending Approval'
-                              : (isConfirmed
-                                  ? 'Booking Confirmed!'
-                                  : 'Payment Verification Failed'),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isPending
-                              ? 'আপনার পেমেন্ট তথ্য এডমিন প্যানেলে ভেরিফিকেশন করা হচ্ছে। খুব শীঘ্রই নিশ্চিত করা হবে।'
-                              : (isConfirmed
-                                  ? 'আপনার বিআরটিসি টিকিট সফলভাবে অনুমোদিত হয়েছে। ডাউনলোড করে সাথে রাখুন।'
-                                  : 'আপনার ট্রানজেকশন তথ্য মিল পাওয়া যায়নি। কাস্টমার কেয়ারে যোগাযোগ করুন।'),
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 13.5),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
             // RepaintBoundary wrapping Official E-Ticket Stub
             RepaintBoundary(
               key: _ticketKey,
@@ -493,30 +420,31 @@ class _TicketScreenState extends State<TicketScreen> {
                 amountPaid: widget.amountPaid,
                 issueDateTime: issueDateTime,
                 currentStatus: currentStatus,
+                isCompact: true,
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 18),
 
             // Desktop Action Toolbar
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: 200,
-                  height: 48,
+                  width: 180,
+                  height: 44,
                   child: OutlinedButton.icon(
-                    icon: const Icon(Icons.home_rounded, size: 20),
+                    icon: const Icon(Icons.home_rounded, size: 18),
                     label: const Text('হোমে যান'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primaryRed,
                       side: const BorderSide(
-                          color: AppColors.primaryRed, width: 1.8),
+                          color: AppColors.primaryRed, width: 1.5),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       textStyle: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -532,33 +460,33 @@ class _TicketScreenState extends State<TicketScreen> {
                   ),
                 ),
                 if (isConfirmed) ...[
-                  const SizedBox(width: 20),
+                  const SizedBox(width: 16),
                   SizedBox(
-                    width: 220,
-                    height: 48,
+                    width: 200,
+                    height: 44,
                     child: ElevatedButton.icon(
                       icon: _isSaving
                           ? const SizedBox(
-                              width: 20,
-                              height: 20,
+                              width: 18,
+                              height: 18,
                               child: CircularProgressIndicator(
                                 color: Colors.white,
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Icon(Icons.download_rounded, size: 20),
+                          : const Icon(Icons.download_rounded, size: 18),
                       label: Text(
                         _isSaving ? 'সেভ হচ্ছে...' : 'টিকিট পিকচার ডাউনলোড',
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryGreen,
                         foregroundColor: Colors.white,
-                        elevation: 3,
+                        elevation: 2,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         textStyle: const TextStyle(
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

@@ -328,21 +328,20 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                     final currentStatus =
                         liveTicket?.status ?? activeTicket.status;
 
-                    final bool liveIsPending = currentStatus == 'PENDING';
                     final bool liveIsConfirmed = currentStatus == 'CONFIRMED';
 
                     return Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: AppColors.primaryRed.withAlpha(40),
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withAlpha(8),
-                            blurRadius: 14,
+                            blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
                         ],
@@ -350,82 +349,6 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Live Status Banner Header
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 16),
-                            decoration: BoxDecoration(
-                              gradient: AppColors.darkHeaderGradient,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha(15),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withAlpha(25),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    liveIsPending
-                                        ? Icons.hourglass_top_rounded
-                                        : (liveIsConfirmed
-                                            ? Icons.check_circle_rounded
-                                            : Icons.cancel_rounded),
-                                    color: liveIsPending
-                                        ? AppColors.accentGold
-                                        : (liveIsConfirmed
-                                            ? Colors.white
-                                            : Colors.orangeAccent),
-                                    size: 32,
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        liveIsPending
-                                            ? 'Payment Pending Approval'
-                                            : (liveIsConfirmed
-                                                ? 'Booking Confirmed!'
-                                                : 'Payment Verification Failed'),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        liveIsPending
-                                            ? 'পেমেন্ট এডমিন প্যানেলে যাচাই করা হচ্ছে'
-                                            : (liveIsConfirmed
-                                                ? 'বিআরটিসি টিকিট সফলভাবে অনুমোদিত হয়েছে'
-                                                : 'ট্রানজেকশন আইডি মিল পাওয়া যায়নি'),
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-
                           // RepaintBoundary wrapping Official E-Ticket Stub
                           RepaintBoundary(
                             key: _ticketKey,
@@ -442,10 +365,11 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                               amountPaid: activeTicket.totalAmount,
                               issueDateTime: issueDateTime,
                               currentStatus: currentStatus,
+                              isCompact: true,
                             ),
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 14),
 
                           // Action Buttons Toolbar
                           Row(
@@ -461,7 +385,7 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                         color: AppColors.primaryRed,
                                         width: 1.5),
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
+                                        vertical: 11),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -479,7 +403,7 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                 ),
                               ),
                               if (liveIsConfirmed) ...[
-                                const SizedBox(width: 14),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: ElevatedButton.icon(
                                     icon: _isSaving
@@ -503,7 +427,7 @@ class _MyTicketsScreenState extends State<MyTicketsScreen> {
                                       foregroundColor: Colors.white,
                                       elevation: 2,
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 12),
+                                          vertical: 11),
                                       shape: RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(12),

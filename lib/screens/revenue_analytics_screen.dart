@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../core/app_colors.dart';
 import '../models/ticket_model.dart';
 import '../services/firestore_service.dart';
+import '../widgets/desktop_web_navbar.dart';
+import '../widgets/responsive_layout.dart';
 
 class RevenueAnalyticsScreen extends StatefulWidget {
   final List<TicketModel>? initialTickets;
@@ -9,7 +11,8 @@ class RevenueAnalyticsScreen extends StatefulWidget {
   const RevenueAnalyticsScreen({super.key, this.initialTickets});
 
   @override
-  State<RevenueAnalyticsScreen> createState() => _RevenueAnalyticsScreenState();
+  State<RevenueAnalyticsScreen> createState() =>
+      _RevenueAnalyticsScreenState();
 }
 
 class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
@@ -40,13 +43,17 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveLayout.isDesktop(context);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      appBar: AppBar(
-        title: const Text('রেভিনিউ অ্যানালিটিক্স ড্যাশবোর্ড'),
-        backgroundColor: AppColors.primaryRedDark,
-        elevation: 2,
-      ),
+      appBar: isDesktop
+          ? const DesktopWebNavbar()
+          : AppBar(
+              title: const Text('রেভিনিউ অ্যানালিটিক্স ড্যাশবোর্ড'),
+              backgroundColor: AppColors.primaryRedDark,
+              elevation: 2,
+            ),
       body: StreamBuilder<List<TicketModel>>(
         stream: _firestoreService.getAllTicketsStream(),
         initialData: widget.initialTickets,
@@ -100,299 +107,390 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
               bkashRevenue + nagadRevenue + rocketRevenue + cardRevenue;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Time Filter Pills
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildFilterPill('ALL', 'সর্বমোট আয়'),
-                          const SizedBox(width: 8),
-                          _buildFilterPill('TODAY', 'আজকের আয়'),
-                          const SizedBox(width: 8),
-                          _buildFilterPill('WEEK', 'এই সপ্তাহের আয়'),
-                          const SizedBox(width: 8),
-                          _buildFilterPill('MONTH', 'এই মাসের আয়'),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    // Top Grand Total Revenue Banner
+            child: ConstrainedWebContainer(
+              maxWidth: 1200,
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isDesktop) ...[
+                    // Desktop Header Bar with Back Button
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(22),
+                      padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
-                        gradient: AppColors.darkHeaderGradient,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: const [
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: Colors.grey.shade300),
+                        boxShadow: [
                           BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 16,
-                            offset: Offset(0, 6),
+                            color: Colors.black.withAlpha(8),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'মোট অনুমোদিত আয় (Total Earnings)',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
+                              OutlinedButton.icon(
+                                icon: const Icon(Icons.arrow_back_rounded,
+                                    size: 18),
+                                label: const Text('ফিরে যান'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.primaryRed,
+                                  side: const BorderSide(
+                                      color: AppColors.primaryRed, width: 1.5),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
                                 ),
+                                onPressed: () => Navigator.pop(context),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withAlpha(30),
-                                  borderRadius: BorderRadius.circular(12),
+                              const SizedBox(width: 16),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'রেভিনিউ অ্যানালিটিক্স ড্যাশবোর্ড',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primaryRed,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'রিয়েল-টাইম আয়, পেমেন্ট চ্যানেল ও বাস সার্ভিস রেভিনিউ রিপোর্ট',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withAlpha(20),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.trending_up_rounded,
+                                    color: AppColors.primaryGreen, size: 16),
+                                SizedBox(width: 6),
+                                Text(
+                                  'REVENUE REPORT',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primaryGreen,
+                                  ),
                                 ),
-                                child: const Row(
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+
+                  // Time Filter Pills
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterPill('ALL', 'সর্বমোট আয়'),
+                        const SizedBox(width: 8),
+                        _buildFilterPill('TODAY', 'আজকের আয়'),
+                        const SizedBox(width: 8),
+                        _buildFilterPill('WEEK', 'এই সপ্তাহের আয়'),
+                        const SizedBox(width: 8),
+                        _buildFilterPill('MONTH', 'এই মাসের আয়'),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // Top Grand Total Revenue Banner
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.darkHeaderGradient,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 16,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'মোট অনুমোদিত আয় (Total Earnings)',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(30),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.trending_up_rounded,
+                                      color: AppColors.accentGold, size: 16),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'VERIFIED',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '৳ $totalRevenue',
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(color: Colors.white24, height: 1),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildSubMetric(
+                              label: 'অনুমোদিত টিকিট',
+                              value: '${confirmedTickets.length} টি',
+                            ),
+                            _buildSubMetric(
+                              label: 'গড় টিকিট মূল্য',
+                              value: confirmedTickets.isNotEmpty
+                                  ? '৳ ${(totalRevenue / confirmedTickets.length).round()}'
+                                  : '৳ 0',
+                            ),
+                            _buildSubMetric(
+                              label: 'অনলাইন কালেকশন',
+                              value: '৳ $onlineTotal',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Payment Method Breakdown Card
+                  const Text(
+                    'পেমেন্ট মেথড অনুপাত (Payment Breakdown)',
+                    style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: Colors.grey.shade300),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(8),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildPaymentBarItem(
+                          label: 'bKash (বিকাশ)',
+                          amount: bkashRevenue,
+                          total: totalRevenue,
+                          color: const Color(0xFFE2136E),
+                          icon: Icons.account_balance_wallet_rounded,
+                        ),
+                        const Divider(height: 20),
+                        _buildPaymentBarItem(
+                          label: 'Counter Cash (ক্যাশ)',
+                          amount: counterCashRevenue,
+                          total: totalRevenue,
+                          color: AppColors.primaryGreen,
+                          icon: Icons.point_of_sale_rounded,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Bus Service Comparison Section
+                  const Text(
+                    'বাস সার্ভিস ভিত্তিক আয় (Revenue per Bus)',
+                    style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildBusRevenueCard(
+                          busName: 'BRTC AC Service - 1',
+                          subtext: 'বড়চওনা / সখিপুর ➔ ঢাকা',
+                          revenue: bus1Revenue,
+                          ticketCount: bus1Count,
+                          color: AppColors.primaryRed,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildBusRevenueCard(
+                          busName: 'BRTC AC Service - 2',
+                          subtext: 'গারোবাজার / সাগরদিঘী ➔ ঢাকা',
+                          revenue: bus2Revenue,
+                          ticketCount: bus2Count,
+                          color: Colors.blue.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Recent Confirmed Transactions List
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'সাম্প্রতিক অনুমোদিত আয়সমূহ',
+                        style: TextStyle(
+                            fontSize: 16.5, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'মোট ${confirmedTickets.length} টি',
+                        style: const TextStyle(
+                            fontSize: 12.5, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  confirmedTickets.isEmpty
+                      ? Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'এই সময়সীমার মধ্যে কোনো অনুমোদিত লেনদেন নেই',
+                              style: TextStyle(color: AppColors.textSecondary),
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: confirmedTickets.length > 8
+                              ? 8
+                              : confirmedTickets.length,
+                          itemBuilder: (context, index) {
+                            final ticket = confirmedTickets[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 1,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 6),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryGreen.withAlpha(20),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.check_circle_rounded,
+                                    color: AppColors.primaryGreen,
+                                    size: 20,
+                                  ),
+                                ),
+                                title: Text(
+                                  ticket.passengerName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${ticket.busName.split('(').first.trim()} • ${ticket.selectedSeats.join(', ')}',
+                                  style: const TextStyle(fontSize: 11.5),
+                                ),
+                                trailing: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Icon(Icons.trending_up_rounded,
-                                        color: AppColors.accentGold, size: 16),
-                                    SizedBox(width: 4),
                                     Text(
-                                      'VERIFIED',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
+                                      '৳ ${ticket.totalAmount}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 15,
+                                        color: AppColors.primaryGreen,
+                                      ),
+                                    ),
+                                    Text(
+                                      ticket.paymentMethod,
+                                      style: const TextStyle(
+                                        fontSize: 10.5,
+                                        color: AppColors.textSecondary,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            '৳ $totalRevenue',
-                            style: const TextStyle(
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          const Divider(color: Colors.white24, height: 1),
-                          const SizedBox(height: 14),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildSubMetric(
-                                label: 'অনুমোদিত টিকিট',
-                                value: '${confirmedTickets.length} টি',
-                              ),
-                              _buildSubMetric(
-                                label: 'গড় টিকিট মূল্য',
-                                value: confirmedTickets.isNotEmpty
-                                    ? '৳ ${(totalRevenue / confirmedTickets.length).round()}'
-                                    : '৳ 0',
-                              ),
-                              _buildSubMetric(
-                                label: 'অনলাইন কালেকশন',
-                                value: '৳ $onlineTotal',
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Payment Method Breakdown Card
-                    const Text(
-                      'পেমেন্ট মেথড অনুপাত (Payment Breakdown)',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(8),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _buildPaymentBarItem(
-                            label: 'bKash (বিকাশ)',
-                            amount: bkashRevenue,
-                            total: totalRevenue,
-                            color: const Color(0xFFE2136E),
-                            icon: Icons.account_balance_wallet_rounded,
-                          ),
-                          const Divider(height: 20),
-                          _buildPaymentBarItem(
-                            label: 'Counter Cash (ক্যাশ)',
-                            amount: counterCashRevenue,
-                            total: totalRevenue,
-                            color: AppColors.primaryGreen,
-                            icon: Icons.point_of_sale_rounded,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Bus Service Comparison Section
-                    const Text(
-                      'বাস সার্ভিস ভিত্তিক আয় (Revenue per Bus)',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildBusRevenueCard(
-                            busName: 'BRTC AC Service - 1',
-                            subtext: 'বড়চওনা / সখিপুর ➔ ঢাকা',
-                            revenue: bus1Revenue,
-                            ticketCount: bus1Count,
-                            color: AppColors.primaryRed,
-                          ),
+                            );
+                          },
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildBusRevenueCard(
-                            busName: 'BRTC AC Service - 2',
-                            subtext: 'গারোবাজার / সাগরদিঘী ➔ ঢাকা',
-                            revenue: bus2Revenue,
-                            ticketCount: bus2Count,
-                            color: Colors.blue.shade800,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Recent Confirmed Transactions List
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'সাম্প্রতিক অনুমোদিত আয়সমূহ',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'মোট ${confirmedTickets.length} টি',
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    confirmedTickets.isEmpty
-                        ? Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'এই সময়সীমার মধ্যে কোনো অনুমোদিত লেনদেন নেই',
-                                style: TextStyle(color: AppColors.textSecondary),
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: confirmedTickets.length > 8
-                                ? 8
-                                : confirmedTickets.length,
-                            itemBuilder: (context, index) {
-                              final ticket = confirmedTickets[index];
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                elevation: 1,
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 6),
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryGreen.withAlpha(20),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.check_circle_rounded,
-                                      color: AppColors.primaryGreen,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  title: Text(
-                                    ticket.passengerName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    '${ticket.busName.split('(').first.trim()} • ${ticket.selectedSeats.join(', ')}',
-                                    style: const TextStyle(fontSize: 11.5),
-                                  ),
-                                  trailing: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        '৳ ${ticket.totalAmount}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 15,
-                                          color: AppColors.primaryGreen,
-                                        ),
-                                      ),
-                                      Text(
-                                        ticket.paymentMethod,
-                                        style: const TextStyle(
-                                          fontSize: 10.5,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ],
-                ),
-              );
+                ],
+              ),
+            ),
+          );
         },
       ),
     );
@@ -425,7 +523,7 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 11),
+          style: const TextStyle(color: Colors.white70, fontSize: 11.5),
         ),
         const SizedBox(height: 2),
         Text(
@@ -433,7 +531,7 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 13.5,
+            fontSize: 14,
           ),
         ),
       ],
@@ -461,7 +559,7 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
                 Text(
                   label,
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 13),
+                      fontWeight: FontWeight.bold, fontSize: 13.5),
                 ),
               ],
             ),
@@ -470,7 +568,7 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.w900,
                 color: color,
-                fontSize: 13,
+                fontSize: 13.5,
               ),
             ),
           ],
@@ -497,10 +595,10 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withAlpha(50)),
         boxShadow: [
           BoxShadow(
@@ -517,28 +615,30 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
             busName,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 13,
+              fontSize: 14,
               color: color,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             subtext,
-            style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
+            style:
+                const TextStyle(fontSize: 11, color: AppColors.textSecondary),
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 12),
           Text(
             '৳ $revenue',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.w900,
               color: color,
             ),
           ),
           Text(
             'বিক্রিত টিকিট: $ticketCount টি',
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style:
+                const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
           ),
         ],
       ),

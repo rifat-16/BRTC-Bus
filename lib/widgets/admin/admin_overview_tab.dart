@@ -4,6 +4,7 @@ import '../../models/ticket_model.dart';
 import '../../screens/bus_manifest_screen.dart';
 import '../../screens/revenue_analytics_screen.dart';
 import '../../services/firestore_service.dart';
+import '../responsive_layout.dart';
 import 'admin_payment_config_card.dart';
 import 'admin_route_fare_hub.dart';
 
@@ -31,7 +32,7 @@ class AdminOverviewTab extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -52,7 +53,7 @@ class AdminOverviewTab extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: bgColor,
                     borderRadius: BorderRadius.circular(12),
@@ -69,7 +70,7 @@ class AdminOverviewTab extends StatelessWidget {
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.w900,
                     color: color,
                   ),
@@ -78,7 +79,7 @@ class AdminOverviewTab extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
@@ -97,19 +98,25 @@ class AdminOverviewTab extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return ElevatedButton.icon(
-      icon: Icon(icon, size: 18),
-      label: Text(label, style: const TextStyle(fontSize: 13)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        elevation: 2,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        icon: Icon(icon, size: 18),
+        label: Text(
+          label,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        onPressed: onTap,
       ),
-      onPressed: onTap,
     );
   }
 
@@ -127,12 +134,301 @@ class AdminOverviewTab extends StatelessWidget {
       totalRevenue += t.totalAmount;
     }
 
+    final isDesktop = ResponsiveLayout.isDesktop(context);
+
+    if (isDesktop) {
+      return SingleChildScrollView(
+        child: ConstrainedWebContainer(
+          maxWidth: 1250,
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Sleek Desktop Page Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'BRTC Admin Portal Overview',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryRed,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'টিকিট ভেরিফিকেশন, সিট ম্যানেজার ও রিভিনিউ কন্ট্রোল সেন্টার',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGreen.withAlpha(20),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      'LIVE SYNC',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryGreen,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              // 4 Analytics Metrics Cards Row
+              GridView.count(
+                crossAxisCount: 4,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.6,
+                children: [
+                  _buildMetricCard(
+                    title: 'পেন্ডিং রিকোয়েস্ট',
+                    value: '${pendingTickets.length} টি',
+                    icon: Icons.hourglass_top_rounded,
+                    color: Colors.orange.shade800,
+                    bgColor: Colors.orange.shade50,
+                    onTap: () => tabController.animateTo(1),
+                  ),
+                  _buildMetricCard(
+                    title: 'অনুমোদিত আয়',
+                    value: '৳ $totalRevenue',
+                    icon: Icons.account_balance_wallet_rounded,
+                    color: AppColors.primaryGreen,
+                    bgColor: Colors.green.shade50,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        createSmoothPageRoute(
+                          RevenueAnalyticsScreen(
+                            initialTickets: confirmedTickets,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildMetricCard(
+                    title: 'মোট ইস্যুকৃত টিকিট',
+                    value: '${confirmedTickets.length} টি',
+                    icon: Icons.confirmation_number_rounded,
+                    color: Colors.blue.shade800,
+                    bgColor: Colors.blue.shade50,
+                    onTap: () => tabController.animateTo(2),
+                  ),
+                  _buildMetricCard(
+                    title: 'বাতিল রিকোয়েস্ট',
+                    value: '${rejectedTickets.length} টি',
+                    icon: Icons.cancel_rounded,
+                    color: AppColors.primaryRed,
+                    bgColor: Colors.red.shade50,
+                    onTap: () => tabController.animateTo(2),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 22),
+
+              // Main 2-Column Desktop Grid Split (62% Left, 38% Right)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Column: Operations (62% width)
+                  Expanded(
+                    flex: 62,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Live Bus Trip Manifest Banner
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              createSmoothPageRoute(const BusManifestScreen()),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.primaryRed,
+                                  AppColors.primaryRedDark
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 10,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withAlpha(35),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.format_list_bulleted_rounded,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'লাইভ বাস ট্রিপ ও যাত্রী ম্যানিফেস্ট 📋',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15.5,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'দৈনিক ৪টি ট্রিপের সিট হিসাব, প্যাসেঞ্জার লিস্ট ও ওয়েবিল প্রিন্ট',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 11.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  color: Colors.white,
+                                  size: 15,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // Route Fare Hub
+                        AdminRouteFareHub(firestoreService: firestoreService),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 24),
+
+                  // Right Column: Controls & Shortcuts (38% width)
+                  Expanded(
+                    flex: 38,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Quick Actions Card
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: Colors.grey.shade300),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(8),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'দ্রুত অ্যাকশনসমূহ (Quick Actions)',
+                                style: TextStyle(
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryRed,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              _buildQuickActionButton(
+                                icon: Icons.analytics_rounded,
+                                label: 'রেভিনিউ ড্যাশবোর্ড',
+                                color: AppColors.primaryGreen,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    createSmoothPageRoute(
+                                      RevenueAnalyticsScreen(
+                                        initialTickets: confirmedTickets,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 10),
+                              _buildQuickActionButton(
+                                icon: Icons.badge_rounded,
+                                label: 'বাস ট্রিপ ম্যানিফেস্ট',
+                                color: Colors.blue.shade800,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    createSmoothPageRoute(
+                                        const BusManifestScreen()),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // bKash Payment Config Card
+                        AdminPaymentConfigCard(
+                            firestoreService: firestoreService),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Banner
+          // Mobile Banner
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -258,7 +554,7 @@ class AdminOverviewTab extends StatelessWidget {
             },
             borderRadius: BorderRadius.circular(20),
             child: Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [AppColors.primaryRed, AppColors.primaryRedDark],
@@ -298,7 +594,7 @@ class AdminOverviewTab extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: 16,
                           ),
                         ),
                         SizedBox(height: 2),
@@ -306,7 +602,7 @@ class AdminOverviewTab extends StatelessWidget {
                           'দৈনিক ৪টি ট্রিপের সিট হিসাব, প্যাসেঞ্জার লিস্ট ও সুপারভাইজার কপি',
                           style: TextStyle(
                             color: Colors.white70,
-                            fontSize: 11.5,
+                            fontSize: 12,
                           ),
                         ),
                       ],
@@ -349,7 +645,7 @@ class AdminOverviewTab extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: _buildQuickActionButton(
                   icon: Icons.badge_rounded,

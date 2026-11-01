@@ -13,6 +13,7 @@ class OfficialETicketStub extends StatelessWidget {
   final int amountPaid;
   final String issueDateTime;
   final String currentStatus;
+  final bool isCompact;
 
   const OfficialETicketStub({
     super.key,
@@ -27,6 +28,7 @@ class OfficialETicketStub extends StatelessWidget {
     required this.amountPaid,
     required this.issueDateTime,
     required this.currentStatus,
+    this.isCompact = false,
   });
 
   @override
@@ -34,15 +36,19 @@ class OfficialETicketStub extends StatelessWidget {
     final bool isPending = currentStatus == 'PENDING';
     final bool isConfirmed = currentStatus == 'CONFIRMED';
 
+    final double outerPadding = isCompact ? 12.0 : 20.0;
+    final double headerPadding = isCompact ? 12.0 : 18.0;
+    final double dividerHeight = isCompact ? 10.0 : 18.0;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(isCompact ? 18 : 24),
         boxShadow: const [
           BoxShadow(
-            color: Colors.black38,
-            blurRadius: 18,
-            offset: Offset(0, 8),
+            color: Colors.black26,
+            blurRadius: 14,
+            offset: Offset(0, 6),
           ),
         ],
       ),
@@ -50,11 +56,11 @@ class OfficialETicketStub extends StatelessWidget {
         children: [
           // Official BRTC Red Banner
           Container(
-            padding: const EdgeInsets.all(18),
-            decoration: const BoxDecoration(
+            padding: EdgeInsets.all(headerPadding),
+            decoration: BoxDecoration(
               gradient: AppColors.darkHeaderGradient,
               borderRadius: BorderRadius.vertical(
-                top: Radius.circular(24),
+                top: Radius.circular(isCompact ? 18 : 24),
               ),
             ),
             child: Row(
@@ -64,19 +70,19 @@ class OfficialETicketStub extends StatelessWidget {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.directions_bus_filled_rounded,
                           color: AppColors.primaryRed,
-                          size: 20,
+                          size: isCompact ? 18 : 20,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -85,16 +91,16 @@ class OfficialETicketStub extends StatelessWidget {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                fontSize: isCompact ? 12 : 13,
                                 letterSpacing: 0.5,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                            Text(
+                            const Text(
                               'বাংলাদেশ সড়ক পরিবহন কর্পোরেশন',
                               style: TextStyle(
                                 color: Colors.white70,
-                                fontSize: 10.5,
+                                fontSize: 10,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -116,7 +122,7 @@ class OfficialETicketStub extends StatelessWidget {
                         : (isConfirmed
                             ? AppColors.primaryGreen
                             : AppColors.primaryRed),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     children: [
@@ -126,7 +132,7 @@ class OfficialETicketStub extends StatelessWidget {
                             : (isConfirmed
                                 ? Icons.verified_rounded
                                 : Icons.error_rounded),
-                        size: 14,
+                        size: 13,
                         color: Colors.white,
                       ),
                       const SizedBox(width: 4),
@@ -137,7 +143,7 @@ class OfficialETicketStub extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -149,26 +155,26 @@ class OfficialETicketStub extends StatelessWidget {
 
           // Main Ticket Details
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(outerPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   busName,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: isCompact ? 14.5 : 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primaryRed,
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: isCompact ? 8 : 14),
 
                 // Route Timeline Card
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: EdgeInsets.all(isCompact ? 10 : 14),
                   decoration: BoxDecoration(
                     color: AppColors.backgroundColor,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(isCompact ? 12 : 16),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -177,41 +183,41 @@ class OfficialETicketStub extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('From (যাত্রা)',
-                              style: TextStyle(color: Colors.grey, fontSize: 11)),
+                              style: TextStyle(color: Colors.grey, fontSize: 10.5)),
                           const SizedBox(height: 2),
                           Text(
                             from,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                              fontSize: isCompact ? 13.5 : 15,
                               color: AppColors.textPrimary,
                             ),
                           ),
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(isCompact ? 6 : 8),
                         decoration: const BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.arrow_forward_rounded,
                           color: AppColors.primaryRed,
-                          size: 18,
+                          size: isCompact ? 16 : 18,
                         ),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           const Text('To (গন্তব্য)',
-                              style: TextStyle(color: Colors.grey, fontSize: 11)),
+                              style: TextStyle(color: Colors.grey, fontSize: 10.5)),
                           const SizedBox(height: 2),
                           Text(
                             to,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                              fontSize: isCompact ? 13.5 : 15,
                               color: AppColors.textPrimary,
                             ),
                           ),
@@ -221,23 +227,24 @@ class OfficialETicketStub extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                SizedBox(height: isCompact ? 10 : 16),
 
                 // Passenger & Journey Grid
-                _buildDetailRow('যাত্রীর নাম (Passenger)', passengerName),
-                const Divider(height: 18),
-                _buildDetailRow('মোবাইল নম্বর (Phone)', phoneNumber),
-                const Divider(height: 18),
+                _buildDetailRow('যাত্রীর নাম (Passenger)', passengerName, isCompact),
+                Divider(height: dividerHeight),
+                _buildDetailRow('মোবাইল নম্বর (Phone)', phoneNumber, isCompact),
+                Divider(height: dividerHeight),
                 _buildDetailRow(
-                    'যাত্রার তারিখ ও সময় (Date & Time)', journeyDateAndDepartureTime),
-                const Divider(height: 18),
-                _buildDetailRow('সিট নম্বর (Seat)', seats.join(', ')),
-                const Divider(height: 18),
-                _buildDetailRow('ইস্যুর সময় (Issued)', issueDateTime),
-                const Divider(height: 18),
+                    'যাত্রার তারিখ ও সময় (Date & Time)', journeyDateAndDepartureTime, isCompact),
+                Divider(height: dividerHeight),
+                _buildDetailRow('সিট নম্বর (Seat)', seats.join(', '), isCompact),
+                Divider(height: dividerHeight),
+                _buildDetailRow('ইস্যুর সময় (Issued)', issueDateTime, isCompact),
+                Divider(height: dividerHeight),
                 _buildDetailRow(
                   'মোট পরিশোধিত মূল্য',
                   '৳ $amountPaid',
+                  isCompact,
                   isHighlight: true,
                 ),
               ],
@@ -248,20 +255,20 @@ class OfficialETicketStub extends StatelessWidget {
           Row(
             children: [
               const SizedBox(
-                height: 24,
-                width: 12,
+                height: 20,
+                width: 10,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.primaryRedDark,
                     borderRadius: BorderRadius.horizontal(
-                      right: Radius.circular(12),
+                      right: Radius.circular(10),
                     ),
                   ),
                 ),
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       return Flex(
@@ -283,13 +290,13 @@ class OfficialETicketStub extends StatelessWidget {
                 ),
               ),
               const SizedBox(
-                height: 24,
-                width: 12,
+                height: 20,
+                width: 10,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.primaryRedDark,
                     borderRadius: BorderRadius.horizontal(
-                      left: Radius.circular(12),
+                      left: Radius.circular(10),
                     ),
                   ),
                 ),
@@ -299,80 +306,80 @@ class OfficialETicketStub extends StatelessWidget {
 
           // Bottom QR Code & Supervisor Scanner Stub
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(isCompact ? 12 : 20),
             child: Column(
               children: [
                 if (isConfirmed) ...[
                   // QR Scanner Box for Confirmed Tickets
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(isCompact ? 8 : 12),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: Colors.grey.shade200),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withAlpha(8),
-                          blurRadius: 10,
+                          blurRadius: 8,
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.qr_code_2_rounded,
-                      size: 90,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SelectableText(
-                    'Ticket ID: $ticketId',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      letterSpacing: 1.1,
+                      size: isCompact ? 68 : 90,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  SelectableText(
+                    'Ticket ID: $ticketId',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isCompact ? 12 : 13,
+                      letterSpacing: 1.0,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
                     'বাসে ওঠার সময় সুপারভাইজারকে এই টিকিট বা কিউআর কোডটি দেখান',
                     style: TextStyle(
                       color: AppColors.textSecondary,
-                      fontSize: 12,
+                      fontSize: isCompact ? 11 : 12,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ] else if (isPending) ...[
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(isCompact ? 10 : 16),
                     decoration: BoxDecoration(
                       color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.orange.shade200),
                     ),
                     child: Column(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.hourglass_bottom_rounded,
                           color: Colors.orange,
-                          size: 36,
+                          size: isCompact ? 28 : 36,
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
+                        const SizedBox(height: 6),
+                        Text(
                           'পেমেন্ট ভেরিফিকেশন পেন্ডিং রয়েছে',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: isCompact ? 13 : 14,
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
-                          'এডমিন আপনার TrxID তথ্য যাচাই করে অনুমোদন দিলে এখানে স্বয়ংক্রিয়ভাবে ডাউনলোডযোগ্য কিউআর কোড চলে আসবে।',
+                          'এডমিন আপনার TrxID যাচাই করে অনুমোদন দিলে এখানে কিউআর কোড চলে আসবে।',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: isCompact ? 11 : 12,
                             color: Colors.grey.shade800,
-                            height: 1.35,
+                            height: 1.3,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -381,47 +388,47 @@ class OfficialETicketStub extends StatelessWidget {
                   ),
                 ] else ...[
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(isCompact ? 10 : 16),
                     decoration: BoxDecoration(
                       color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.red.shade200),
                     ),
-                    child: const Text(
-                      'পেমেন্ট তথ্যের সাথে মিল না থাকায় রিকোয়েস্টটি বাতিল করা হয়েছে। অনুগ্রহ করে হেল্পলাইনে যোগাযোগ করুন।',
+                    child: Text(
+                      'পেমেন্ট তথ্যের সাথে মিল না থাকায় রিকোয়েস্টটি বাতিল করা হয়েছে।',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: isCompact ? 11 : 12,
                         color: AppColors.primaryRed,
-                        height: 1.35,
+                        height: 1.3,
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 ],
-                const SizedBox(height: 14),
+                SizedBox(height: isCompact ? 8 : 14),
 
                 // Reporting Time Notice Box
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(isCompact ? 8 : 12),
                   decoration: BoxDecoration(
                     color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Colors.orange.shade200),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.info_outline_rounded,
-                          size: 20, color: Colors.orange.shade900),
-                      const SizedBox(width: 10),
+                          size: isCompact ? 16 : 20, color: Colors.orange.shade900),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'বিশেষ দ্রষ্টব্য: বাস ছাড়ার ১৫ মিনিট পূর্বে নির্দিষ্ট কাউন্টারে উপস্থিত থাকুন।',
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: isCompact ? 10.5 : 11.5,
                             fontWeight: FontWeight.w600,
                             color: Colors.orange.shade900,
-                            height: 1.3,
+                            height: 1.25,
                           ),
                         ),
                       ),
@@ -436,7 +443,7 @@ class OfficialETicketStub extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value,
+  Widget _buildDetailRow(String label, String value, bool isCompact,
       {bool isHighlight = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -444,8 +451,8 @@ class OfficialETicketStub extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
+            style: TextStyle(
+              fontSize: isCompact ? 11.5 : 12,
               color: AppColors.textSecondary,
             ),
           ),
@@ -454,7 +461,7 @@ class OfficialETicketStub extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            fontSize: 12.5,
+            fontSize: isCompact ? 12 : 12.5,
             fontWeight: isHighlight ? FontWeight.w900 : FontWeight.bold,
             color:
                 isHighlight ? AppColors.primaryGreen : AppColors.textPrimary,

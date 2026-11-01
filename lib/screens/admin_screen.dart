@@ -35,7 +35,8 @@ class _AdminScreenState extends State<AdminScreen>
     _tabController = TabController(length: 5, vsync: this);
 
     _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
+      if (!_tabController.indexIsChanging &&
+          _desktopSelectedIndex != _tabController.index) {
         setState(() {
           _desktopSelectedIndex = _tabController.index;
         });
@@ -121,6 +122,44 @@ class _AdminScreenState extends State<AdminScreen>
         ],
       ),
     );
+  }
+
+  Widget _getTabWidget(
+    int index,
+    List<TicketModel> allTickets,
+    List<TicketModel> pendingTickets,
+  ) {
+    switch (index) {
+      case 0:
+        return AdminOverviewTab(
+          allTickets: allTickets,
+          tabController: _tabController,
+          firestoreService: _firestoreService,
+        );
+      case 1:
+        return AdminPendingTab(
+          pendingTickets: pendingTickets,
+          firestoreService: _firestoreService,
+        );
+      case 2:
+        return AdminDirectoryTab(
+          allTickets: allTickets,
+        );
+      case 3:
+        return AdminSeatManagerTab(
+          firestoreService: _firestoreService,
+        );
+      case 4:
+        return AdminCounterTab(
+          firestoreService: _firestoreService,
+        );
+      default:
+        return AdminOverviewTab(
+          allTickets: allTickets,
+          tabController: _tabController,
+          firestoreService: _firestoreService,
+        );
+    }
   }
 
   @override
@@ -400,11 +439,16 @@ class _AdminScreenState extends State<AdminScreen>
               NavigationRail(
                 selectedIndex: _desktopSelectedIndex,
                 onDestinationSelected: (int index) {
+                  if (_desktopSelectedIndex == index) return;
                   setState(() {
                     _desktopSelectedIndex = index;
-                    _tabController.animateTo(index);
+                    _tabController.index = index;
                   });
                 },
+                indicatorColor: AppColors.primaryRed.withAlpha(25),
+                indicatorShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 labelType: NavigationRailLabelType.all,
                 selectedIconTheme: const IconThemeData(
                   color: AppColors.primaryRed,
@@ -453,30 +497,41 @@ class _AdminScreenState extends State<AdminScreen>
 
               const VerticalDivider(thickness: 1, width: 1),
 
-              // Right Tab Content Container
+              // Right Tab Content Container with Zero-Blink Smooth Fade Overlay Transition
               Expanded(
-                child: IndexedStack(
-                  index: _desktopSelectedIndex,
-                  children: [
-                    AdminOverviewTab(
-                      allTickets: allTickets,
-                      tabController: _tabController,
-                      firestoreService: _firestoreService,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+                    return Stack(
+                      alignment: Alignment.topLeft,
+                      children: <Widget>[
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    );
+                  },
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    final bool isIncoming =
+                        (child.key == ValueKey<int>(_desktopSelectedIndex));
+                    if (isIncoming) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      );
+                    }
+                    // Keep outgoing tab solid 100% opaque underneath to prevent white background flash
+                    return child;
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey<int>(_desktopSelectedIndex),
+                    child: _getTabWidget(
+                      _desktopSelectedIndex,
+                      allTickets,
+                      pendingTickets,
                     ),
-                    AdminPendingTab(
-                      pendingTickets: pendingTickets,
-                      firestoreService: _firestoreService,
-                    ),
-                    AdminDirectoryTab(
-                      allTickets: allTickets,
-                    ),
-                    AdminSeatManagerTab(
-                      firestoreService: _firestoreService,
-                    ),
-                    AdminCounterTab(
-                      firestoreService: _firestoreService,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
